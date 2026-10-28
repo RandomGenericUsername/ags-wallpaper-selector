@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "app": "wallpaper-selector",
+  "instance": "wallpaper-selector",
+  "configDir": "ags-wallpaper-selector",
+  "mode": "live",
+  "holdsUnsavedState": false
+}
