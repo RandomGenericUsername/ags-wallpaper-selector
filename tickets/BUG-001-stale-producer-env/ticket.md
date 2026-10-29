@@ -2,7 +2,7 @@
 id: BUG-001
 title: "Wallpaper selector keeps using csg after tpr activation (stale RUNTIME__PALETTE__PRODUCER)"
 kind: bug
-status: proposed
+status: in-progress
 lane: 2
 severity: high
 links:
@@ -95,6 +95,36 @@ succeeds with the tpr cache entry.
 - [ ] The selector's apply tests cover an inherited stale producer.
 - [ ] Any restart/refresh behavior is coordinated with `dotfiles-provision`
   BUG-007 and the runtime producer seam.
+
+## Triage decision (2026-10-29)
+
+The selector must not resolve or pass the producer. The proper fix is a
+runtime-owned config file read by every `dotfiles-runtime` composition:
+
+```text
+<install_spine>/config/dotfiles-runtime/producer.json
+{"schema_version":1,"producer":"tpr","tpr_engine":"native","tpr_runtime":"container"}
+```
+
+- `dotfiles-runtime` REQ-004 implements the reader; ambient
+  `RUNTIME__PALETTE__PRODUCER` is ignored (warned), and `inspect producer`
+  reports the resolved source/engine.
+- `dotfiles-provision` BUG-007/008 renders the config before the daemon and
+  runtime-seed; runtime-seed no longer needs producer env.
+- The selector’s `lib/apply.ts` keeps calling
+  `dotfiles-runtime wallpaper set` unchanged; it must not read environment.d,
+  read the config, set an env override, or pass a producer. A selector started
+  before the producer change then uses tpr automatically.
+- Optional, display-only: query `dotfiles-runtime inspect producer` at startup
+  and warn if `ignored_env` differs from `producer`. This is not required for
+  correctness and must not change the apply path.
+- Restarting AGS/session is only session hygiene, not the fix: Hyprland itself
+  has the stale `csg` env, so restarting apps from it would not help.
+
+Acceptance: a selector-shaped subprocess with
+`RUNTIME__PALETTE__PRODUCER=csg` but config `tpr` must apply with tpr and the tpr
+cache key; failures must be labelled `tool: tpr`. Close this ticket after the
+runtime/provisioning fix is deployed and verified; no selector-side workaround.
 
 ## Cross-references
 

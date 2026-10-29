@@ -14,7 +14,7 @@
 
 ## Bugs
 
-- [BUG-001-stale-producer-env](./BUG-001-stale-producer-env/ticket.md) — Wallpaper selector keeps using csg after tpr activation (stale RUNTIME__PALETTE__PRODUCER) | `proposed` | severity: high | investigation; no worktree
+- [BUG-001-stale-producer-env](./BUG-001-stale-producer-env/ticket.md) — Wallpaper selector keeps using csg after tpr activation (stale RUNTIME__PALETTE__PRODUCER) | `in-progress` | severity: high | fixed by runtime producer config; selector apply unchanged; no worktree
 
 ## Ops tasks
 
