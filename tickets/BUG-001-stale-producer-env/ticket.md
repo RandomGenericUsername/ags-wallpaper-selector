@@ -2,7 +2,7 @@
 id: BUG-001
 title: "Wallpaper selector keeps using csg after tpr activation (stale RUNTIME__PALETTE__PRODUCER)"
 kind: bug
-status: in-progress
+status: done
 lane: 2
 severity: high
 links:
@@ -133,3 +133,13 @@ runtime/provisioning fix is deployed and verified; no selector-side workaround.
 - `dotfiles-runtime` palette-producer seam; daemon environment.
 - The CSG failures in `failures.jsonl` are being triaged in the runtime ticket;
   restarting the selector on tpr is the immediate workaround.
+
+## Closeout evidence (2026-10-30)
+
+- Runtime `v0.4.1` + provisioning `v0.1.27` deployed.
+- `producer.json` resolves `tpr`; a selector-shaped process with
+  `RUNTIME__PALETTE__PRODUCER=csg` reports the env as `ignored_env` and applies
+  with `producer=tpr`, `producer_source=config`, `producer_engine=native`.
+- A selector-CWD run against `white_tailed_eagle.png` succeeded with a tpr
+  palette entry and 7-app AGS refresh (0 failures).
+- Selector apply code unchanged; no env/config read was added to the app.
