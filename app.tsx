@@ -33,8 +33,8 @@ app.start({
   // The runtime is the only palette-refresh trigger (AD-27). This is the real
   // v0.5.0 handler: re-apply the Theme pointer and re-render the
   // registry-backed search icon. The selector's drawer, query, drilled
-  // selection, contrast choices and in-flight apply state are untouched; a
-  // same-hash trigger is a safe no-op and a throw stays retryable.
+  // selection and in-flight apply state are untouched; a same-hash trigger is
+  // a safe no-op and a throw stays retryable.
   requestHandler: createWallpaperSelectorPaletteRefresh(() => {
     applySelectorAppearance({
       reapplyTheme: () => theme.apply(),

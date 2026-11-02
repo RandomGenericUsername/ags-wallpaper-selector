@@ -5,9 +5,9 @@
  * pointer moved. The v0.5.0 selector performs exactly two non-destructive
  * steps: re-apply the stable Theme pointer, then rebuild the registry-backed
  * search icon. The drawer itself — the visible grid or variant gallery, the
- * search query, the drilled selection, the contrast choices and any in-flight
- * apply — is deliberately NOT touched. That is what "preserve the drawer"
- * means here, and it is why this module has no drawer operations at all.
+ * search query, the drilled selection and any in-flight apply — is deliberately
+ * NOT touched. That is what "preserve the drawer" means here, and it is why
+ * this module has no drawer operations at all.
  *
  * Two separate concerns live here so a stock-runner test can execute them with
  * no `gi://`/`ags` imports:

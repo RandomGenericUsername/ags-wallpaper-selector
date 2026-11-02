@@ -23,14 +23,13 @@ ags list`, and requires `manifest.configDir == the deployed link basename`.
 
 The selector is a centered, on-demand dialog:
 
-- Level 1 — the install-spine wallpaper grid with search, hover Apply and a
-  per-wallpaper high-contrast swatch.
+- Level 1 — the install-spine wallpaper grid with search and hover Apply.
 - Level 2 — the per-wallpaper variant gallery (breadcrumb + Back) fed by the
   runtime's effects cache.
-- Apply shells `dotfiles-runtime wallpaper set`; progress and completion arrive
-  on the `wallpaper.state` domain event. Applying collapses the drawer
-  immediately and the set continues in the background; failures surface through
-  the notifications app.
+- Apply shells exactly `dotfiles-runtime wallpaper set <image>`; progress and
+  completion arrive on the `wallpaper.state` domain event. Applying collapses
+  the drawer immediately and the set continues in the background; failures
+  surface through the notifications app.
 
 ### Data paths
 
@@ -64,7 +63,7 @@ process.
 
 ## Local development
 
-The program tuple is `ags-platform` / `contracts` v0.3.0. Those tags are
+The program tuple is `ags-platform` v0.4.0 / `contracts` v0.3.0. Those tags are
 local-only in this run; the local gates use gitignored symlinks under `.dev/`.
 
 ```sh
@@ -97,7 +96,6 @@ lib/model.ts                  pure grouping/filtering (node-tested, no GJS)
 lib/scan.ts                   spine + effects-cache + current.json scan (GJS)
 lib/thumbnails.ts             disk-cached GdkPixbuf thumbnails (GJS)
 lib/apply.ts                  execAsync engine entry point (GJS)
-lib/contrast.ts               icons preference/regenerate CLI shell (GJS)
 lib/appearance.ts             pure refresh order + hash idempotency
 lib/palette-refresh.ts        real handler wiring (pure)
 ui/WallpaperSelectorWindow.tsx P5 window (imperative GTK + createEffect)

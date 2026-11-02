@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased — BUG-002
+
+- Remove the deleted runtime contrast surface from the selector: the client
+  module, the per-wallpaper swatch/checkbox and its state wiring, and the extra
+  apply argument. `lib/apply.ts` now runs exactly
+  `dotfiles-runtime wallpaper set <image>`.
+- Migrate `style.css` (and the frozen app template) to semantic `palette.v1`
+  roles; no legacy `@color_*` alias remains.
+- Pin `ags-platform` v0.4.0 for the role tuple (contracts stays v0.3.0).
+- Add `tests/no-contrast-surface.test.mjs` to keep the removed surface and
+  legacy color aliases out.
+
 ## v0.1.0 — 2026-10-27
 
 - Extract the wallpaper selector from `ags-apps` v0.5.0 into the standalone

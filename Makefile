@@ -1,9 +1,10 @@
 .PHONY: help platform-dev contracts-dev deps types test conformance drift ci bundle typecheck gates clean
 
-# The program tuple this app builds/tests against (AD-31/AD-34). v0.3.0 is the
-# REQ-008 adoption tuple and is LOCAL-ONLY in this run: local gates symlink it
-# from .dev/ (gitignored), CI checks out the tags explicitly once published.
-AGS_PLATFORM_VERSION := v0.3.0
+# The program tuple this app builds/tests against (AD-31/AD-34). v0.4.0 is the
+# palette.v1 role tuple the CSS migration consumes; contracts stays v0.3.0.
+# The tuple is LOCAL-ONLY in this run: local gates symlink it from .dev/
+# (gitignored), CI checks out the tags explicitly once published.
+AGS_PLATFORM_VERSION := v0.4.0
 CONTRACTS_VERSION := v0.3.0
 AGS_PLATFORM_REPO := https://github.com/RandomGenericUsername/ags-platform.git
 CONTRACTS_REPO := https://github.com/RandomGenericUsername/contracts.git
@@ -23,8 +24,8 @@ help:
 	@echo "make ci           stock-runner gate: test + conformance + drift"
 	@echo "make gates        all local gates: test + conformance + drift + bundle + typecheck"
 	@echo ""
-	@echo "Local-only v0.3.0 tuple: put a checkout/symlink at"
-	@echo "  .dev/ags-platform/v0.3.0  (or AGS_PLATFORM_DEV=/path/to/ags-platform)"
+	@echo "Local-only tuple: put a checkout/symlink at"
+	@echo "  .dev/ags-platform/v0.4.0  (or AGS_PLATFORM_DEV=/path/to/ags-platform)"
 	@echo "  .dev/contracts/v0.3.0     (or CONTRACTS_ROOT=/path/to/contracts)"
 
 # The platform shortcut. It MUST point outside node_modules: Node refuses to
@@ -97,8 +98,8 @@ types:
 # modules; nothing reachable imports `gi://*` or `ags/*`.
 test: platform-dev
 	@command -v node >/dev/null || { echo "FAIL: test: node is not on PATH" >&2; exit 1; }
-	@echo "==> test: node --test tests/unit.test.mjs tests/apply-collapse.test.mjs"
-	node --test tests/unit.test.mjs tests/apply-collapse.test.mjs
+	@echo "==> test: node --test tests/unit.test.mjs tests/apply-collapse.test.mjs tests/no-contrast-surface.test.mjs"
+	node --test tests/unit.test.mjs tests/apply-collapse.test.mjs tests/no-contrast-surface.test.mjs
 	@echo "==> test: node tests/model.test.mjs"
 	node tests/model.test.mjs
 

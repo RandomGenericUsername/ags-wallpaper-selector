@@ -52,8 +52,9 @@ committable; never mix planning edits with implementation in one turn.
 (`ubuntu-latest`): `make test`, `make conformance` and `make drift`. There is
 no self-hosted runner and no CI secret dependency.
 
-- `make test` — pure unit tests, the selector model and the BUG-002
-  Apply-collapse gate. Node only; nothing imports `gi://*` or `ags/*`.
+- `make test` — pure unit tests, the selector model, the BUG-002
+  Apply-collapse gate and the removed-contrast-surface gate. Node only; nothing
+  imports `gi://*` or `ags/*`.
 - `make conformance` — manifest identity, live handler and template gate.
 - `make drift` — shared event client against the canonical `contracts` tuple.
 - `make typecheck` — LOCAL: needs `ags` on PATH plus GIR/Astal; generates
@@ -61,9 +62,9 @@ no self-hosted runner and no CI secret dependency.
 - `make bundle` — LOCAL: `ags bundle app.tsx build/ags-wallpaper-selector.js`.
 - `make gates` — all of the above.
 
-The program tuple is `ags-platform` / `contracts` v0.3.0, local-only in this
-run. `.dev/` is gitignored; never commit a fetched platform, `node_modules/`,
-`@girs/`, generated `tsconfig.json` or bundle output.
+The program tuple is `ags-platform` v0.4.0 / `contracts` v0.3.0, local-only in
+this run. `.dev/` is gitignored; never commit a fetched platform,
+`node_modules/`, `@girs/`, generated `tsconfig.json` or bundle output.
 
 ## 5. Live refresh invariants
 
