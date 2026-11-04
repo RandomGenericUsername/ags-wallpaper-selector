@@ -16,7 +16,7 @@ CONTRACTS_ROOT ?= $(CONTRACTS_FETCH_DIR)
 BUNDLE_FILE := build/ags-wallpaper-selector.js
 
 help:
-	@echo "make test         pure unit + model + Apply-collapse tests (Node only)"
+	@echo "make test         pure unit + model + Apply-collapse + hoverbar layout tests (Node only)"
 	@echo "make conformance  manifest + handler + template conformance"
 	@echo "make drift        shared event client <-> contracts drift gate"
 	@echo "make typecheck    desktop-stack tsc gate (LOCAL; needs ags + GIR)"
@@ -98,8 +98,8 @@ types:
 # modules; nothing reachable imports `gi://*` or `ags/*`.
 test: platform-dev
 	@command -v node >/dev/null || { echo "FAIL: test: node is not on PATH" >&2; exit 1; }
-	@echo "==> test: node --test tests/unit.test.mjs tests/apply-collapse.test.mjs tests/no-contrast-surface.test.mjs"
-	node --test tests/unit.test.mjs tests/apply-collapse.test.mjs tests/no-contrast-surface.test.mjs
+	@echo "==> test: node --test tests/unit.test.mjs tests/apply-collapse.test.mjs tests/no-contrast-surface.test.mjs tests/hoverbar-layout.test.mjs"
+	node --test tests/unit.test.mjs tests/apply-collapse.test.mjs tests/no-contrast-surface.test.mjs tests/hoverbar-layout.test.mjs
 	@echo "==> test: node tests/model.test.mjs"
 	node tests/model.test.mjs
 

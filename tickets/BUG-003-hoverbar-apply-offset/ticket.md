@@ -2,7 +2,7 @@
 id: BUG-003
 title: "L1 hover toolbar puts the Apply pill off-centre in its container"
 kind: bug
-status: triage
+status: in-progress
 lane: direct
 severity: low
 links:
