@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased — BUG-003
+## v0.2.1 — 2026-11-04
 
 - Fix the L1 hover toolbar so the Apply pill sits symmetrically inside its dark
   container: `.ws-hoverbar` now supplies even padding on all four sides and
@@ -8,7 +8,7 @@
 - Add `tests/hoverbar-layout.test.mjs` to keep the hoverbar/button spacing
   contract.
 
-## Unreleased — BUG-002
+## v0.2.0 — 2026-11-01
 
 - Remove the deleted runtime contrast surface from the selector: the client
   module, the per-wallpaper swatch/checkbox and its state wiring, and the extra
