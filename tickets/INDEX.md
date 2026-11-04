@@ -16,6 +16,7 @@
 
 - [BUG-001-stale-producer-env](./BUG-001-stale-producer-env/ticket.md) — Wallpaper selector keeps using csg after tpr activation (stale RUNTIME__PALETTE__PRODUCER) | `done` | fixed by runtime v0.4.1 producer config; selector apply unchanged
 - [BUG-002-removed-contrast-surface](./BUG-002-removed-contrast-surface/ticket.md) — Selector still calls the runtime's deleted contrast surface (cannot apply wallpapers) | `done` | severity high; fixed by c56e45b; CSS migrated to palette.v1 roles; gates green
+- [BUG-003-hoverbar-apply-offset](./BUG-003-hoverbar-apply-offset/ticket.md) — L1 hover toolbar puts the Apply pill off-centre in its container | `triage` | severity low
 
 ## Ops tasks
 
