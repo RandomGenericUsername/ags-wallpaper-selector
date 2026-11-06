@@ -13,7 +13,7 @@
 - [REQ-001-standalone-wallpaper-selector/ticket.md](./REQ-001-standalone-wallpaper-selector/ticket.md) — Extract the wallpaper selector into the standalone ags-wallpaper-selector repo | `done` | links: worktree none, branch main
 - [REQ-002-skin-consumption/ticket.md](./REQ-002-skin-consumption/ticket.md) — Consume the app-scoped skin plane in the wallpaper selector | `done` | links: worktree `.worktrees/REQ-002/`, branch `ticket/REQ-002-skin-consumption`; merged to main, tagged v0.3.0
 - [REQ-003-appearance-migration/ticket.md](./REQ-003-appearance-migration/ticket.md) — Migrate the wallpaper selector to the v2 Appearance plane | `done` | links: worktree `.worktrees/REQ-003/`, branch `ticket/REQ-003-appearance-migration`; gates green, fast-forward merged to main, tagged v0.4.0
-- [REQ-004-layout-default-size/ticket.md](./REQ-004-layout-default-size/ticket.md) — Restore the pre-v2 960×640 window default fallback | `in-progress` | links: worktree `.worktrees/REQ-004/`, branch `ticket/REQ-004-layout-default-size`
+- [REQ-004-layout-default-size/ticket.md](./REQ-004-layout-default-size/ticket.md) — Restore the pre-v2 960×640 window default fallback | `done` | links: worktree `.worktrees/REQ-004/`, branch `ticket/REQ-004-layout-default-size`; gates green, fast-forward merged to main, tagged v0.4.1
 
 ## Bugs
 
