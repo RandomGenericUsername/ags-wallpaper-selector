@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v0.4.1 — 2026-11-06
 
 - Restore the pre-v2 `960×640` window default as the layout-token fallbacks
   (was `920×600` from the CSS minimums); the assets manifest moves to
