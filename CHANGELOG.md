@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v0.3.0 — 2026-11-05
 
 - Consume the app-scoped skin plane: `app.tsx` builds one
   `createAppSkin({ configDir: "ags-wallpaper-selector" })` at module scope and
