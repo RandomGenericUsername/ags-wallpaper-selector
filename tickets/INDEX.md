@@ -11,7 +11,7 @@
 ## Requirements
 
 - [REQ-001-standalone-wallpaper-selector/ticket.md](./REQ-001-standalone-wallpaper-selector/ticket.md) — Extract the wallpaper selector into the standalone ags-wallpaper-selector repo | `done` | links: worktree none, branch main
-- [REQ-002-skin-consumption/ticket.md](./REQ-002-skin-consumption/ticket.md) — Consume the app-scoped skin plane in the wallpaper selector | `in-progress` | links: worktree `.worktrees/REQ-002/`, branch `ticket/REQ-002-skin-consumption`
+- [REQ-002-skin-consumption/ticket.md](./REQ-002-skin-consumption/ticket.md) — Consume the app-scoped skin plane in the wallpaper selector | `done` | links: worktree `.worktrees/REQ-002/`, branch `ticket/REQ-002-skin-consumption`; merged to main, tagged v0.3.0
 
 ## Bugs
 
