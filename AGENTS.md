@@ -62,7 +62,7 @@ no self-hosted runner and no CI secret dependency.
 - `make bundle` — LOCAL: `ags bundle app.tsx build/ags-wallpaper-selector.js`.
 - `make gates` — all of the above.
 
-The program tuple is `ags-platform` v0.4.0 / `contracts` v0.3.0, local-only in
+The program tuple is `ags-platform` v0.8.0 / `contracts` v0.6.0, local-only in
 this run. `.dev/` is gitignored; never commit a fetched platform,
 `node_modules/`, `@girs/`, generated `tsconfig.json` or bundle output.
 

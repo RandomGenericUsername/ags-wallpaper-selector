@@ -63,7 +63,7 @@ process.
 
 ## Local development
 
-The program tuple is `ags-platform` v0.4.0 / `contracts` v0.3.0. Those tags are
+The program tuple is `ags-platform` v0.8.0 / `contracts` v0.6.0. Those tags are
 local-only in this run; the local gates use gitignored symlinks under `.dev/`.
 
 ```sh

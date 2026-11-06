@@ -10,8 +10,8 @@ env.d.ts
 build/
 dist/
 
-# Local-only platform/contracts checkouts for the v0.3.0 tuple. The symlinks
-# point at sibling repos; no fetched artifact is committed.
+# Local-only platform/contracts checkouts for the v0.8.0/v0.6.0 tuple. The
+# symlinks point at sibling repos; no fetched artifact is committed.
 .dev/
 
 # Ticket worktrees (scripts/worktree-guard.sh).

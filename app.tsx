@@ -5,6 +5,7 @@ import style from "./style.css";
 // artifact is applied — the stable `colors.css` pointer, repointed on every
 // palette change — so this app no longer carries its own theme.ts copy.
 import { theme } from "ags-platform/adapters/theme";
+import { createAppSkin } from "ags-platform/adapters/skin";
 import { applySelectorAppearance } from "./lib/appearance";
 import { createWallpaperSelectorPaletteRefresh } from "./lib/palette-refresh";
 import {
@@ -27,6 +28,12 @@ function addWindow(element: JSX.Element): void {
   app.add_window(element as Gtk.Window);
 }
 
+// The app-scoped Skin (platform v0.8.0): the runtime expands this app's
+// `$XDG_CONFIG_HOME/ags-wallpaper-selector/skin.css`; the adapter owns the
+// provider and its file monitor. `style.css` remains the bundled glass
+// fallback, so a missing skin artifact is a no-op.
+const skin = createAppSkin({ configDir: "ags-wallpaper-selector" });
+
 app.start({
   css: style,
   instanceName: "wallpaper-selector",
@@ -43,6 +50,9 @@ app.start({
   }),
   main() {
     theme.apply();
+    // Palette first, then the app-scoped skin: the Skin provider is composed
+    // from the live palette and must be the last-installed USER provider.
+    skin.apply();
     // Single centered window on the primary monitor (settings-style tool,
     // not per-monitor chrome — same pattern as the ICME editor window).
     const monitor = app.get_monitors()[0];

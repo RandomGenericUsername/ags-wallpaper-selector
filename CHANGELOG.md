@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+- Consume the app-scoped skin plane: `app.tsx` builds one
+  `createAppSkin({ configDir: "ags-wallpaper-selector" })` at module scope and
+  applies it right after `theme.apply()` in `main()`. The adapter monitor
+  reloads `$XDG_CONFIG_HOME/ags-wallpaper-selector/skin.css`; no refresh
+  request handler is added. `style.css` stays the bundled glass fallback.
+- Move the local tuple to `ags-platform` v0.8.0 / `contracts` v0.6.0.
+- Add `tests/skin-consumption.test.mjs` for the apply order, configDir, the
+  single palette-only request handler and the bundled stylesheet.
+
 ## v0.2.1 — 2026-11-04
 
 - Fix the L1 hover toolbar so the Apply pill sits symmetrically inside its dark
