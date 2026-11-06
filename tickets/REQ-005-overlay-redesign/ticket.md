@@ -21,8 +21,10 @@ one control bar, browsing never writes, and `Set`/`Enter` is the only commit.
 The control bar position and the desktop-bar visibility are configurable through
 the capture-tool settings pattern. The normative mock is
 [`mock.html`](./mock.html); this ticket is the app-local implementation
-contract. The batch-level record is
-`dotfiles-v3/docs/106-wallpaper-selector-overlay.md`.
+contract. The batch-level record is reserved at
+`dotfiles-v3/docs/106-wallpaper-selector-overlay.md`; it is held on the design
+branch until the skin-plane v3 architecture settles. This ticket is
+self-contained and canonical.
 
 ## Acceptance
 
