@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v0.4.0 — 2026-11-06
 
 - Migrate to the v2 Appearance plane: `app.tsx` builds one module-scope
   `createAppearance({ configDir: "ags-wallpaper-selector" })` and applies it in
