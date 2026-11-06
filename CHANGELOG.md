@@ -1,5 +1,23 @@
 # Changelog
 
+## Unreleased
+
+- Migrate to the v2 Appearance plane: `app.tsx` builds one module-scope
+  `createAppearance({ configDir: "ags-wallpaper-selector" })` and applies it in
+  `main()`, replacing the split `theme.apply()` / `skin.apply()` pair.
+- Replace the local palette-refresh wrapper with
+  `createAppearanceRefreshHandler(appearance, work)`; the platform re-applies
+  the whole appearance and the app work rebuilds only the search icon. The
+  `wallpaper.state` progress subscription stays and no request command is
+  added.
+- Consume `layout.ags-wallpaper-selector.root-width` / `root-height` with their
+  `920` / `600` fallbacks at the root size request; `style.css` remains the
+  bundled glass fallback.
+- Move the local tuple to `ags-platform` v0.9.0 / `contracts` v0.7.0.
+- Replace the skin-consumption test with `tests/appearance-consumption.test.mjs`
+  for the appearance apply/configDir/handler, the retained progress
+  subscription, the layout tokens and the bundled stylesheet.
+
 ## v0.3.0 — 2026-11-05
 
 - Consume the app-scoped skin plane: `app.tsx` builds one

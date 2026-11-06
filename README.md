@@ -45,25 +45,38 @@ only its own thumbnail cache under `$XDG_CACHE_HOME`.
 ## `palette-refresh`
 
 The runtime invokes `ags request palette-refresh <appearance-hash> -i
-wallpaper-selector` after an appearance change. The handler is the real v0.5.0
-refresh, wrapped with the standalone invariants:
+wallpaper-selector` after an appearance change. The app registers the v2
+platform handler, wrapped with the standalone invariants:
 
-1. re-apply the stable Theme pointer (`$XDG_CONFIG_HOME/ags/colors.css`);
-2. rebuild the registry-backed search icon from the new palette.
+1. `appearance.apply()` re-reads the current generation and installs the whole
+   palette + skin + mode sheet (`$XDG_CONFIG_HOME/ags-wallpaper-selector/`
+   `appearance.css` through `current/appearance`);
+2. the app-owned work rebuilds the registry-backed search icon from the new
+   palette.
 
 The drawer is **preserved**: no rescan, no query reset, no selection change, no
 visibility change, no status rewrite. `wallpaper.state` remains progress/busy
-status only and never applies the palette.
+status only and never applies the appearance. No additional request command is
+added.
 
-The handler is idempotent by appearance hash and answers with exactly one
-JSON-encoded string (`{"ok":true}` or a protocol failure), via
-`ags-platform/ports/palette-refresh`. A same-hash trigger is a safe no-op; a
-thrown refresh is a retryable failure. A wallpaper change never restarts the
-process.
+The handler is `createAppearanceRefreshHandler(appearance, work)` from
+`ags-platform/adapters/appearance`. It answers with exactly one JSON-encoded
+string (`{"ok":true}` or a protocol failure) via the platform helper. A
+same-hash trigger re-applies the (coalesced) appearance but does not rerun the
+icon work; a thrown apply is a retryable failure. A wallpaper change never
+restarts the process.
+
+## Layout tokens
+
+The app consumes its namespaced v2 metrics in TSX:
+`appearance.value("layout.ags-wallpaper-selector.root-width", 920)` and
+`appearance.value("layout.ags-wallpaper-selector.root-height", 600)` drive the
+root size request. The literals stay in `style.css` only as the bundled glass
+fallback; templates never expand layout tokens into CSS.
 
 ## Local development
 
-The program tuple is `ags-platform` v0.8.0 / `contracts` v0.6.0. Those tags are
+The program tuple is `ags-platform` v0.9.0 / `contracts` v0.7.0. Those tags are
 local-only in this run; the local gates use gitignored symlinks under `.dev/`.
 
 ```sh
@@ -96,8 +109,7 @@ lib/model.ts                  pure grouping/filtering (node-tested, no GJS)
 lib/scan.ts                   spine + effects-cache + current.json scan (GJS)
 lib/thumbnails.ts             disk-cached GdkPixbuf thumbnails (GJS)
 lib/apply.ts                  execAsync engine entry point (GJS)
-lib/appearance.ts             pure refresh order + hash idempotency
-lib/palette-refresh.ts        real handler wiring (pure)
+lib/appearance.ts             pure app-owned search-icon refresh work
 ui/WallpaperSelectorWindow.tsx P5 window (imperative GTK + createEffect)
 tests/                        unit, model, Apply-collapse, drift, conformance
 tickets/                      LIFECYCLE, INDEX, _template, this repo's tickets

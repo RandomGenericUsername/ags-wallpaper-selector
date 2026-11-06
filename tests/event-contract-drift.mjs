@@ -8,9 +8,9 @@
 // transport (no live bus), and asserts the structural facts the standalone
 // extraction keeps: the window consumes the ONE platform event client +
 // IconProvider (no app-local event-bus / icon-registry copies) and the app
-// registers the real palette-refresh wrapper through the Theme port. Executed,
-// never text-scanned -- except the structural source read, which is labelled
-// as such.
+// registers the v2 appearance refresh helper through the platform adapter.
+// Executed, never text-scanned -- except the structural source read, which is
+// labelled as such.
 //
 // Run from the repo root:  make drift
 
@@ -234,10 +234,6 @@ const windowSource = readFileSync(
   "utf-8",
 );
 const appSource = readFileSync(join(selectorDir, "app.tsx"), "utf-8");
-const refreshSource = readFileSync(
-  join(selectorDir, "lib", "palette-refresh.ts"),
-  "utf-8",
-);
 const appearanceSource = readFileSync(
   join(selectorDir, "lib", "appearance.ts"),
   "utf-8",
@@ -269,38 +265,34 @@ check(
   false,
 );
 check(
-  "app imports the platform Theme port",
-  /from\s+"ags-platform\/adapters\/theme"/.test(appSource),
+  "app imports the platform Appearance adapter",
+  /from\s+"ags-platform\/adapters\/appearance"/.test(appSource),
   true,
 );
 check(
-  "app registers the palette-refresh wrapper",
-  /createWallpaperSelectorPaletteRefresh\(/.test(appSource),
+  "app registers the v2 appearance refresh helper",
+  /createAppearanceRefreshHandler\(appearance,/.test(appSource),
   true,
 );
 check(
-  "app imports the app-local refresh wrapper",
-  /from\s+"\.\/lib\/palette-refresh"/.test(appSource),
+  "app builds one module-scope Appearance for its configDir",
+  /const\s+appearance\s*=\s*createAppearance\(\{\s*configDir:\s*"ags-wallpaper-selector"\s*\}\)/.test(appSource),
   true,
 );
 check(
-  "refresh wrapper uses the platform helper",
-  /createPaletteRefreshHandler\(/.test(refreshSource),
+  "app work rebuilds only the search icon",
+  /rebuildSearchIcon:\s*refreshWallpaperSelectorChrome/.test(appSource) &&
+    appearanceSource.includes("surface.rebuildSearchIcon()"),
   true,
 );
 check(
-  "refresh is hash-idempotent",
-  /createAppearanceRefresh\(/.test(refreshSource),
-  true,
+  "app no longer applies the split Theme/Skin pair",
+  /theme\.apply\(\)|skin\.apply\(\)/.test(appSource),
+  false,
 );
 check(
-  "refresh order is theme then search icon",
-  appearanceSource.indexOf("reapplyTheme") < appearanceSource.indexOf("rebuildSearchIcon"),
-  true,
-);
-check(
-  "window does not apply the palette from wallpaper.state",
-  /theme\.apply/.test(windowSource),
+  "window does not apply the appearance from wallpaper.state",
+  /theme\.apply|skin\.apply|appearance\.apply/.test(windowSource),
   false,
 );
 check(

@@ -53,8 +53,8 @@ committable; never mix planning edits with implementation in one turn.
 no self-hosted runner and no CI secret dependency.
 
 - `make test` — pure unit tests, the selector model, the BUG-002
-  Apply-collapse gate and the removed-contrast-surface gate. Node only; nothing
-  imports `gi://*` or `ags/*`.
+  Apply-collapse gate, the removed-contrast-surface gate and the appearance
+  consumption gate. Node only; nothing imports `gi://*` or `ags/*`.
 - `make conformance` — manifest identity, live handler and template gate.
 - `make drift` — shared event client against the canonical `contracts` tuple.
 - `make typecheck` — LOCAL: needs `ags` on PATH plus GIR/Astal; generates
@@ -62,23 +62,31 @@ no self-hosted runner and no CI secret dependency.
 - `make bundle` — LOCAL: `ags bundle app.tsx build/ags-wallpaper-selector.js`.
 - `make gates` — all of the above.
 
-The program tuple is `ags-platform` v0.8.0 / `contracts` v0.6.0, local-only in
+The program tuple is `ags-platform` v0.9.0 / `contracts` v0.7.0, local-only in
 this run. `.dev/` is gitignored; never commit a fetched platform,
 `node_modules/`, `@girs/`, generated `tsconfig.json` or bundle output.
 
 ## 5. Live refresh invariants
 
-`lib/palette-refresh.ts` and `lib/appearance.ts` are pure and executed by tests:
+Platform v0.9.0's `createAppearanceRefreshHandler` owns the
+`palette-refresh` transport and the appearance-hash ledger. `lib/appearance.ts`
+is the pure app-owned work and is executed by tests:
 
 - exactly one JSON-string response per request, through the platform helper;
-- idempotent by appearance hash; a thrown refresh is not recorded as applied;
-- the Theme pointer is re-applied before the search icon is rebuilt;
+- the helper always re-applies the WHOLE appearance before the app work; a
+  repeated hash re-applies the appearance but does not rerun the work, and a
+  thrown apply is not recorded as applied;
+- the app work rebuilds only the registry-backed search icon (the platform
+  apply refreshes the appearance cache);
 - the drawer is preserved: no rescan, no query reset, no selection change, no
   visibility change, no status rewrite, no model reload.
 
-This is the real v0.5.0 handler. `make conformance` asserts these source
-invariants and the platform `checkAppRepo` template gate. Do not weaken them to
-make a test pass.
+Layout metrics are TSX-owned v2 tokens. This app reads
+`layout.ags-wallpaper-selector.root-width` / `root-height` with their `920` /
+`600` fallbacks; templates never expand them into CSS.
+
+`make conformance` asserts these source invariants and the platform
+`checkAppRepo` template gate. Do not weaken them to make a test pass.
 
 ## 6. Release
 

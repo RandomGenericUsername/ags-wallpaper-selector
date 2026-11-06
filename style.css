@@ -1,11 +1,11 @@
 /* Wallpaper selector — rofi-style centered dialog in hypr-pano dress.
  *
- * Every color is a semantic palette.v1 role projected by the platform Theme
- * provider (applied by app.tsx after this sheet): a palette swap restyles the
- * dialog with zero code changes. The runtime's `palette-refresh` request
- * re-applies the Theme pointer and the selector rebuilds its search icon in
- * place; the open drawer is preserved and the process is never restarted
- * (AD-27). */
+ * Every color is a semantic palette.v1 role projected by the platform
+ * Appearance provider (applied by app.tsx after this sheet): a palette swap
+ * restyles the dialog with zero code changes. The runtime's `palette-refresh`
+ * request re-applies the whole appearance and the selector rebuilds its search
+ * icon in place; the open drawer is preserved and the process is never
+ * restarted (AD-27). */
 
 window#wallpaper-selector-window {
   background-color: transparent;

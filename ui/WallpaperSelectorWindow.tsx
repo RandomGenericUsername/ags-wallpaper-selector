@@ -15,11 +15,12 @@ import { createEffect, createState } from "ags";
 // The ONE event client (spine AD-5): the app-local event-bus copies are gone,
 // so the selector consumes `wallpaper.state` through the platform's shared Gio
 // transport + subscribe-before-read core. The event is progress/busy status
-// only; palette application is the runtime's `palette-refresh` command (AD-27).
+// only; appearance application is the runtime's `palette-refresh` command (AD-27).
 import { domainEvents } from "ags-platform/adapters/event-bus";
 // The platform IconProvider (spine AD-4/AD-7): the shared registry-backed
 // provider replaces the app-local icon-registry.ts copy.
 import { registryProvider } from "ags-platform/adapters/icon";
+import type { Appearance } from "ags-platform/ports/appearance";
 import { applyWallpaper } from "../lib/apply";
 import {
   filterWallpapers,
@@ -56,7 +57,10 @@ export function refreshWallpaperSelectorChrome(): void {
   refreshChrome?.();
 }
 
-export function WallpaperSelectorWindow(gdkmonitor: Gdk.Monitor) {
+export function WallpaperSelectorWindow(
+  gdkmonitor: Gdk.Monitor,
+  appearance: Appearance,
+) {
   const [model, setModel] = createState<SelectorModel | null>(null);
   const [query, setQuery] = createState("");
   const [selected, setSelected] = createState<WallpaperEntry | null>(null);
@@ -72,6 +76,18 @@ export function WallpaperSelectorWindow(gdkmonitor: Gdk.Monitor) {
   // Apply controls are recreated per render; `refreshBusy` re-asserts
   // sensitivity on every busy transition.
   const applyControls: Gtk.Button[] = [];
+
+  // Layout metrics are TSX-owned v2 tokens. The fallbacks match the bundled
+  // `style.css` glass values, so a missing appearance generation keeps today's
+  // size; a skin change updates the same root in place.
+  const rootWidth = appearance.value(
+    "layout.ags-wallpaper-selector.root-width",
+    920,
+  );
+  const rootHeight = appearance.value(
+    "layout.ags-wallpaper-selector.root-height",
+    600,
+  );
 
   // Magnifier from the platform IconProvider (AD-4/AD-7): the shared
   // registry-backed provider answers with a tagged `IconSource` — a rendered
@@ -168,6 +184,9 @@ export function WallpaperSelectorWindow(gdkmonitor: Gdk.Monitor) {
     css_classes: ["ws-root", "ws-panel"],
     spacing: 10,
   });
+  createEffect(() =>
+    root.set_size_request(rootWidth(), rootHeight()),
+  );
   // Empty-state banner lives OUTSIDE the FlowBox (mock): a FlowBox child
   // never reliably fills the row, so the banner is a plain block sibling
   // toggled against the scrolled grid — full width, centered text.
@@ -522,8 +541,8 @@ export function WallpaperSelectorWindow(gdkmonitor: Gdk.Monitor) {
     }
   }
 
-  // Palette-derived chrome refresh (runtime `palette-refresh`, AD-27): the
-  // Theme pointer is applied by the app-level handler; this rebuilds the
+  // Appearance-derived chrome refresh (runtime `palette-refresh`, AD-27): the
+  // whole appearance is applied by the app-level handler; this rebuilds the
   // registry-backed search icon without touching the drawer or list.
   function refreshSelectorChrome(): void {
     const old = searchRow.get_first_child();

@@ -5,13 +5,13 @@
 // This is the repo-local gate the standalone contract requires:
 //   1. `app.manifest.json` is schema-valid and carries the selector identity;
 //   2. app.tsx / window / launcher / keybind agree with that identity;
-//   3. the live palette-refresh handler is the real v0.5.0 refresh (Theme
-//      pointer + search icon) and leaves the drawer untouched;
+//   3. the live appearance-refresh handler uses the v2 helper (whole
+//      appearance apply + search-icon work) and leaves the drawer untouched;
 //   4. the shared dev-flow template (AGENTS, tickets, guard, Makefile, CI,
 //      tests, templates/ags-app) is present and the platform's own
 //      `checkAppRepo` template gate passes;
-//   5. the selector keeps the platform event client / IconProvider / Theme
-//      port and has no app-local copies.
+//   5. the selector keeps the platform event client / IconProvider / Appearance
+//      adapter and has no app-local copies.
 //
 // Run from the repo root:  make conformance
 // ---------------------------------------------------------------------------
@@ -196,7 +196,7 @@ test("the app consumes the wallpaper runtime namespace", () => {
 });
 
 test("no app-local platform copy and no sibling-app import survives", () => {
-  for (const retired of ["theme.ts", "event-bus.ts", "event-bus-core.ts", "icon-registry.ts"]) {
+  for (const retired of ["theme.ts", "event-bus.ts", "event-bus-core.ts", "icon-registry.ts", "palette-refresh.ts"]) {
     assert.equal(existsSync(join(ROOT, "lib", retired)), false, `lib/${retired} must not exist`);
   }
   const sources = walk().filter((file) => /^(app\.tsx|lib\/|ui\/)/.test(file));
@@ -242,7 +242,7 @@ test("the frozen copyable template is present for the next app", () => {
   }
 });
 
-test("the contracts v0.6.0 manifest schema agrees with the platform", () => {
+test("the contracts v0.7.0 manifest schema agrees with the platform", () => {
   const contractsRoot = findContractsRoot();
   assert.notEqual(contractsRoot, null, "cannot find contracts (set CONTRACTS_ROOT)");
   const schema = JSON.parse(
@@ -261,20 +261,24 @@ test("the contracts v0.6.0 manifest schema agrees with the platform", () => {
   );
 });
 
-test("the Makefile pins the v0.8.0 platform / v0.6.0 contracts tuple", () => {
+test("the Makefile pins the v0.9.0 platform / v0.7.0 contracts tuple", () => {
   const makefile = readText("Makefile");
-  assert.match(makefile, /^AGS_PLATFORM_VERSION := v0\.8\.0$/m);
-  assert.match(makefile, /^CONTRACTS_VERSION := v0\.6\.0$/m);
+  assert.match(makefile, /^AGS_PLATFORM_VERSION := v0\.9\.0$/m);
+  assert.match(makefile, /^CONTRACTS_VERSION := v0\.7\.0$/m);
 });
 
 // ── 3. The live handler is real and non-destructive ────────────────────────
 
-test("app.tsx registers the real v0.5.0 palette-refresh handler", () => {
+test("app.tsx registers the v2 appearance-refresh handler", () => {
   const app = readText("app.tsx");
-  assert.match(app, /from\s+"\.\/lib\/palette-refresh"/);
-  assert.match(app, /createWallpaperSelectorPaletteRefresh\(/);
-  assert.match(app, /requestHandler:/);
-  assert.match(app, /theme\.apply\(\)/, "the stable Theme pointer is re-applied");
+  assert.match(
+    app,
+    /import\s*\{[^}]*\bcreateAppearance\b[^}]*\}\s*from\s*"ags-platform\/adapters\/appearance"/s,
+  );
+  assert.match(app, /const appearance = createAppearance\(\{ configDir: "ags-wallpaper-selector" \}\)/);
+  assert.match(app, /requestHandler: createAppearanceRefreshHandler\(appearance,/);
+  assert.doesNotMatch(app, /theme\.apply\(\)/, "the split Theme apply is gone");
+  assert.doesNotMatch(app, /skin\.apply\(\)/, "the split Skin apply is gone");
   assert.match(
     app,
     /rebuildSearchIcon:\s*refreshWallpaperSelectorChrome/,
@@ -282,22 +286,21 @@ test("app.tsx registers the real v0.5.0 palette-refresh handler", () => {
   );
 });
 
-test("the handler wiring answers through the platform helper", () => {
-  const palette = readText("lib", "palette-refresh.ts");
-  assert.match(palette, /from\s+"ags-platform\/ports\/palette-refresh"/);
-  assert.match(palette, /createPaletteRefreshHandler\(/);
-  assert.match(palette, /createAppearanceRefresh\(/);
+test("the handler work uses the platform's v2 refresh helper", () => {
+  const app = readText("app.tsx");
+  assert.match(
+    app,
+    /import\s*\{[^}]*\bcreateAppearanceRefreshHandler\b[^}]*\}\s*from\s*"ags-platform\/adapters\/appearance"/s,
+  );
+  assert.match(app, /createAppearanceRefreshHandler\(appearance,\s*\(\)\s*=>/);
+  assert.equal((stripComments(app).match(/requestHandler\s*:/g) ?? []).length, 1);
 });
 
-test("the refresh re-applies the palette before rebuilding the icon", () => {
+test("the app-owned refresh rebuilds only the search icon", () => {
   const appearance = readText("lib", "appearance.ts");
   const body = functionBody(appearance, "export function applySelectorAppearance");
-  assert.match(body, /surface\.reapplyTheme\(\)/);
   assert.match(body, /surface\.rebuildSearchIcon\(\)/);
-  assert.ok(
-    body.indexOf("reapplyTheme") < body.indexOf("rebuildSearchIcon"),
-    "the Theme pointer must be re-applied before the icon is rasterized",
-  );
+  assert.doesNotMatch(body, /reapplyTheme|theme\.apply|skin\.apply/);
 });
 
 test("the search-icon refresh preserves the drawer", () => {
@@ -338,10 +341,11 @@ test("the window exposes only the chrome refresher to app.tsx", () => {
   );
 });
 
-test("the selector consumes the one platform event client and icon provider", () => {
+test("the selector consumes the one platform event client, icon provider and Appearance", () => {
   const window = readText("ui", "WallpaperSelectorWindow.tsx");
   assert.match(window, /from\s+"ags-platform\/adapters\/event-bus"/);
   assert.match(window, /from\s+"ags-platform\/adapters\/icon"/);
   assert.match(window, /WALLPAPER_STATE_TOPIC = "wallpaper\.state"/);
-  assert.doesNotMatch(window, /theme\.apply/);
+  assert.match(window, /from\s+"ags-platform\/ports\/appearance"/);
+  assert.doesNotMatch(window, /theme\.apply|skin\.apply|appearance\.apply/);
 });
