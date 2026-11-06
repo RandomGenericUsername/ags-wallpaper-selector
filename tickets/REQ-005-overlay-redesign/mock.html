@@ -1,0 +1,1673 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>Wallpaper overlay — desktop-spanning prototype</title>
+<style>
+/* ============================================================
+   WHAT THIS IS
+   A full-monitor overlay, not a dialog. The candidate wallpaper
+   fills the whole screen exactly as it would on the desktop.
+   The only chrome is:
+     · two side arrows
+     · one floating settings bar at the bottom
+   Nothing is applied until Set / Enter. Esc puts the live
+   wallpaper back and closes.
+   ============================================================ */
+
+:root {
+  --ink: #f6f5f8;
+  --ink-dim: rgba(246, 245, 248, .62);
+  --ink-faint: rgba(246, 245, 248, .40);
+  --hairline: rgba(255, 255, 255, .14);
+  --glass: rgba(9, 9, 13, .54);
+  --glass-strong: rgba(9, 9, 13, .82);
+  --accent: #ff8a6a;
+  --on-accent: #1a0b06;
+  --live: #4ade80;
+  --look-filter: hue-rotate(0deg) saturate(1) contrast(1);
+  --r-bar: 20px;
+  --r-pill: 999px;
+  --bar-top: 54px;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+
+html, body {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: #000;
+  color: var(--ink);
+  font-family: "Inter", "SF Pro Display", -apple-system, BlinkMacSystemFont,
+               "Segoe UI", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+button, input { font: inherit; color: inherit; }
+button { -webkit-tap-highlight-color: transparent; }
+
+kbd {
+  font: inherit;
+  font-size: 9.5px;
+  font-weight: 650;
+  line-height: 1;
+  color: var(--ink-dim);
+  background: rgba(255, 255, 255, .08);
+  border: 1px solid rgba(255, 255, 255, .12);
+  border-radius: 5px;
+  padding: 3px 5px;
+}
+
+/* ── the wallpaper IS the screen ─────────────────────────────── */
+
+.wall {
+  position: fixed;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  filter: var(--look-filter);
+  transition: opacity .5s ease, filter .4s ease;
+  opacity: 0;
+  z-index: 0;
+  will-change: opacity;
+}
+
+.wall:first-of-type { z-index: 1; }
+.wall:nth-of-type(2) { z-index: 2; }
+
+/* Subtle edges only: the image must stay the image, not a tinted surface. */
+.vignette {
+  position: fixed;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  background:
+    radial-gradient(130% 95% at 50% 42%, transparent 55%, rgba(0, 0, 0, .38) 100%),
+    linear-gradient(to top, rgba(0, 0, 0, .42), transparent 24%);
+}
+
+/* ── the normal desktop bar (stand-in) ─────────────────────────
+   This is your everyday AGS bar, not the selector's control bar.
+   The Placement setting controls whether it stays visible while
+   the wallpaper preview is open.                                */
+
+.desktopbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 8;
+  height: 40px;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  padding: 0 18px;
+  background: rgba(8, 8, 12, .52);
+  border-bottom: 1px solid rgba(255, 255, 255, .08);
+  backdrop-filter: blur(22px) saturate(1.2);
+  font-size: 11px;
+  color: rgba(255, 255, 255, .62);
+  transition: opacity .24s ease, transform .24s ease;
+}
+
+.desktopbar.is-hidden {
+  opacity: 0;
+  transform: translateY(-100%);
+  pointer-events: none;
+}
+
+.db-left { display: flex; align-items: center; gap: 3px; }
+
+.db-ws {
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  border-radius: 7px;
+  font-size: 10.5px;
+  font-variant-numeric: tabular-nums;
+}
+.db-ws.active { background: rgba(255, 255, 255, .14); color: var(--ink); }
+
+.db-center {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, .84);
+  font-variant-numeric: tabular-nums;
+}
+
+.db-right {
+  justify-self: end;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.db-right svg { opacity: .72; }
+
+/* ── overlay chrome ──────────────────────────────────────────── */
+
+.ui {
+  position: fixed;
+  inset: 0;
+  z-index: 4;
+  transition: opacity .26s ease, transform .26s ease;
+}
+
+.ui.closed {
+  opacity: 0;
+  transform: translateY(8px);
+  pointer-events: none;
+}
+
+.ui.is-grid {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* side arrows: the only navigation chrome on the desktop */
+.nav {
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 6;
+  width: 62px;
+  height: 62px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1px solid var(--hairline);
+  background: rgba(9, 9, 13, .40);
+  backdrop-filter: blur(18px) saturate(1.2);
+  color: rgba(255, 255, 255, .92);
+  opacity: .80;
+  cursor: pointer;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .30);
+  transition: opacity .16s, transform .16s, background .16s;
+}
+
+.nav:hover {
+  opacity: 1;
+  background: rgba(9, 9, 13, .62);
+  transform: translateY(-50%) scale(1.04);
+}
+
+.nav:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.nav.prev { left: 26px; }
+.nav.next { right: 26px; }
+.nav[disabled] { opacity: .22; pointer-events: none; }
+
+/* ── the one settings bar ────────────────────────────────────── */
+
+.bar {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 7;
+  width: min(1160px, calc(100vw - 56px));
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 26px;
+  padding: 14px 18px;
+  border-radius: var(--r-bar);
+  background: var(--glass);
+  border: 1px solid var(--hairline);
+  backdrop-filter: blur(28px) saturate(1.3);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, .46);
+  overflow: hidden;
+}
+
+/* Placement is a setting: bottom edge or below the desktop bar. */
+.bar.is-bottom { bottom: 30px; top: auto; }
+.bar.is-top { top: var(--bar-top); bottom: auto; }
+
+/* commit progress runs along the bottom edge of the bar */
+.bar::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 2px;
+  width: calc(var(--p, 0) * 100%);
+  background: var(--accent);
+  opacity: 0;
+  transition: width .5s cubic-bezier(.2, .7, .2, 1), opacity .2s;
+  box-shadow: 0 0 16px var(--accent);
+}
+.bar.is-busy::after { opacity: 1; }
+
+.bar-left { min-width: 0; }
+
+.name-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.name {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 16px;
+  font-weight: 650;
+  letter-spacing: -.01em;
+}
+
+.state-pill {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 20px;
+  padding: 0 8px;
+  border-radius: var(--r-pill);
+  background: rgba(255, 255, 255, .08);
+  color: rgba(255, 255, 255, .70);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: .02em;
+}
+
+.state-pill.live {
+  background: rgba(74, 222, 128, .14);
+  color: #c4f8d6;
+}
+
+.state-pill .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--live);
+  box-shadow: 0 0 0 2px rgba(74, 222, 128, .14);
+}
+
+.state-pill.setting {
+  background: rgba(255, 255, 255, .10);
+  color: rgba(255, 255, 255, .88);
+}
+
+.meta-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 4px;
+  font-size: 11.5px;
+  color: var(--ink-dim);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.meta-row.is-step { color: var(--accent); font-weight: 550; }
+
+.swatches { display: flex; gap: 4px; }
+
+.swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .22);
+}
+
+/* middle: looks of the focused wallpaper */
+.bar-mid {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  justify-self: center;
+}
+
+.looks-head {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 10.5px;
+  font-weight: 650;
+  color: rgba(255, 255, 255, .48);
+  white-space: nowrap;
+}
+
+.looks-head .current {
+  color: rgba(255, 255, 255, .88);
+  font-weight: 600;
+}
+
+.looks-head kbd { margin-left: 1px; }
+
+.looks-row { display: flex; gap: 6px; }
+
+.look {
+  position: relative;
+  width: 54px;
+  height: 34px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background-size: cover;
+  background-position: center;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .12);
+  opacity: .70;
+  cursor: pointer;
+  transition: opacity .16s, box-shadow .16s, transform .16s;
+}
+
+.look:hover { opacity: .95; transform: translateY(-1px); }
+
+.look.is-selected {
+  opacity: 1;
+  box-shadow: inset 0 0 0 2px var(--accent), 0 5px 14px rgba(0, 0, 0, .32);
+}
+
+.look.is-live::after {
+  content: "";
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--live);
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, .30);
+}
+
+.looks-empty {
+  display: flex;
+  align-items: center;
+  height: 34px;
+  font-size: 10.5px;
+  color: rgba(255, 255, 255, .42);
+  white-space: nowrap;
+}
+
+/* right: the commit */
+.bar-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 5px;
+  justify-self: end;
+}
+
+.bar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.gear {
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1px solid var(--hairline);
+  background: rgba(255, 255, 255, .06);
+  color: rgba(255, 255, 255, .68);
+  cursor: pointer;
+  transition: color .15s, background .15s, border-color .15s;
+}
+
+.gear:hover,
+.gear.is-active {
+  color: var(--ink);
+  background: rgba(255, 255, 255, .12);
+  border-color: rgba(255, 255, 255, .22);
+}
+
+.gear:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.set {
+  position: relative;
+  height: 42px;
+  padding: 0 18px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  border: 0;
+  border-radius: var(--r-pill);
+  background: var(--accent);
+  color: var(--on-accent);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  overflow: hidden;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, .34);
+  transition: transform .14s, filter .14s, background .2s, color .2s;
+}
+
+.set:hover { transform: translateY(-1px); filter: brightness(1.06); }
+.set:active { transform: none; }
+.set:focus-visible { outline: 2px solid rgba(255, 255, 255, .9); outline-offset: 3px; }
+
+.set kbd {
+  color: inherit;
+  background: rgba(0, 0, 0, .14);
+  border-color: rgba(0, 0, 0, .18);
+}
+
+.set.is-live {
+  background: rgba(255, 255, 255, .08);
+  color: rgba(255, 255, 255, .54);
+  box-shadow: none;
+  cursor: default;
+}
+.set.is-live:hover { transform: none; filter: none; }
+.set.is-live kbd { display: none; }
+.set.is-committing { cursor: progress; }
+
+.set-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: calc(var(--p, 0) * 100%);
+  background: rgba(255, 255, 255, .22);
+  transition: width .5s cubic-bezier(.2, .7, .2, 1);
+}
+
+.set-text { position: relative; z-index: 1; }
+.set kbd { position: relative; z-index: 1; }
+
+.bar-hints {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 9.5px;
+  color: var(--ink-faint);
+  white-space: nowrap;
+}
+
+/* ── placement settings (the capture-tool pattern, in miniature) ─
+   Same grammar as ags-capture-tool's settings page: grouped rows,
+   segmented pills, a spin value, and immediate persistence.     */
+
+.settings-pop {
+  position: fixed;
+  z-index: 12;
+  width: 322px;
+  padding: 14px;
+  border-radius: 16px;
+  background: rgba(12, 12, 17, .92);
+  border: 1px solid rgba(255, 255, 255, .14);
+  backdrop-filter: blur(26px) saturate(1.2);
+  box-shadow: 0 22px 60px rgba(0, 0, 0, .52);
+}
+
+.sp-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.sp-head .title { font-size: 13px; font-weight: 650; }
+.sp-head .sub { font-size: 10px; font-weight: 550; color: var(--ink-faint); }
+
+.sp-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 9px 0;
+  border-top: 1px solid rgba(255, 255, 255, .07);
+}
+.sp-row:first-of-type { border-top: 0; }
+.sp-row.is-disabled { opacity: .36; pointer-events: none; }
+
+.sp-label { font-size: 11.5px; font-weight: 550; color: rgba(255, 255, 255, .86); }
+.sp-label .desc {
+  display: block;
+  margin-top: 2px;
+  font-size: 9.5px;
+  font-weight: 400;
+  color: var(--ink-faint);
+}
+
+.seg {
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  border-radius: var(--r-pill);
+  background: rgba(255, 255, 255, .06);
+  border: 1px solid rgba(255, 255, 255, .10);
+}
+.seg button {
+  height: 26px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: var(--r-pill);
+  background: transparent;
+  color: var(--ink-dim);
+  font-size: 10.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .15s, color .15s;
+}
+.seg button:hover { color: var(--ink); }
+.seg button.selected {
+  background: rgba(255, 255, 255, .15);
+  color: var(--ink);
+}
+
+.stepper { display: flex; align-items: center; gap: 5px; }
+.stepper button {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1px solid var(--hairline);
+  background: transparent;
+  color: var(--ink-dim);
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+}
+.stepper button:hover { color: var(--ink); background: rgba(255, 255, 255, .06); }
+.stepper .val {
+  min-width: 34px;
+  text-align: center;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+
+.sp-foot {
+  margin-top: 10px;
+  padding-top: 9px;
+  border-top: 1px solid rgba(255, 255, 255, .07);
+  font-size: 9.5px;
+  color: var(--ink-faint);
+}
+
+/* ── reopen (after close / after commit) ─────────────────────── */
+
+.reopen {
+  position: fixed;
+  left: 50%;
+  bottom: 36px;
+  transform: translateX(-50%);
+  z-index: 10;
+  height: 42px;
+  padding: 0 20px;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--hairline);
+  background: var(--glass-strong);
+  backdrop-filter: blur(20px);
+  color: var(--ink);
+  font-size: 12.5px;
+  font-weight: 650;
+  cursor: pointer;
+}
+.reopen:hover { background: rgba(28, 28, 36, .92); }
+
+/* ── contact sheet (finder mode) ─────────────────────────────── */
+
+.grid {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  padding: 32px clamp(24px, 4vw, 60px) 28px;
+  background: rgba(6, 6, 9, .86);
+  backdrop-filter: blur(30px) saturate(1.1);
+  opacity: 0;
+  transform: scale(1.008);
+  pointer-events: none;
+  transition: opacity .22s ease, transform .22s ease;
+}
+
+.grid.open { opacity: 1; transform: none; pointer-events: auto; }
+
+.grid-head {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 22px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, .10);
+}
+
+.grid-title h2 {
+  margin: 0;
+  font-size: 21px;
+  font-weight: 650;
+  letter-spacing: -.01em;
+}
+.grid-title .n { margin-left: 8px; font-size: 14px; font-weight: 550; color: var(--ink-faint); }
+.grid-title .sub { margin-top: 5px; font-size: 11.5px; color: var(--ink-faint); }
+
+.grid-tools { display: flex; align-items: center; gap: 10px; }
+
+.gsearch {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 300px;
+  height: 36px;
+  padding: 0 12px;
+  border-radius: var(--r-pill);
+  background: rgba(255, 255, 255, .06);
+  border: 1px solid rgba(255, 255, 255, .12);
+}
+.gsearch svg { color: var(--ink-faint); flex: 0 0 auto; }
+.gsearch input {
+  flex: 1;
+  min-width: 0;
+  background: none;
+  border: 0;
+  outline: 0;
+  color: var(--ink);
+  font-size: 12.5px;
+}
+.gsearch input::placeholder { color: var(--ink-faint); }
+
+.icon-btn {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, .12);
+  background: transparent;
+  color: var(--ink-dim);
+  cursor: pointer;
+}
+.icon-btn:hover { color: var(--ink); background: rgba(255, 255, 255, .05); }
+
+.grid-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 20px 4px 8px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, .18) transparent;
+}
+
+.grid-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px 20px;
+  max-width: 1320px;
+  margin: 0 auto;
+}
+
+.gcard {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0;
+  border: 0;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+}
+
+.g-art {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 13px;
+  background-size: cover;
+  background-position: center;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .10);
+  transition: transform .16s, box-shadow .16s;
+}
+
+.gcard:hover .g-art {
+  transform: translateY(-2px);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .18), 0 12px 28px rgba(0, 0, 0, .32);
+}
+
+.gcard.is-focused .g-art { box-shadow: inset 0 0 0 2px var(--accent); }
+
+.g-live {
+  position: absolute;
+  top: 9px;
+  right: 9px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  height: 21px;
+  padding: 0 8px;
+  border-radius: var(--r-pill);
+  background: rgba(8, 8, 10, .55);
+  backdrop-filter: blur(8px);
+  font-size: 9.5px;
+  font-weight: 700;
+}
+.g-live::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--live);
+}
+
+.g-name { font-size: 12.5px; font-weight: 600; }
+.g-meta { font-size: 10.5px; color: var(--ink-faint); }
+
+/* ── toast ───────────────────────────────────────────────────── */
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 140px;
+  z-index: 30;
+  transform: translate(-50%, 10px);
+  padding: 10px 16px;
+  border-radius: var(--r-pill);
+  background: var(--glass-strong);
+  border: 1px solid rgba(255, 255, 255, .16);
+  backdrop-filter: blur(18px);
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 600;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .2s, transform .2s;
+}
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+.toast .t-live { color: var(--live); }
+
+/* ── responsive ──────────────────────────────────────────────── */
+
+@media (max-width: 1180px) {
+  .bar { gap: 16px; }
+  .bar-hints { display: none; }
+}
+
+@media (max-width: 980px) {
+  .bar { grid-template-columns: 1fr auto; }
+  .bar-mid { display: none; }
+}
+
+@media (max-width: 880px) {
+  .bar { bottom: 18px; }
+  .nav { width: 52px; height: 52px; }
+  .nav.prev { left: 14px; }
+  .nav.next { right: 14px; }
+  .gsearch { width: 190px; }
+  .grid-title .sub { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- Two layers = one crossfade between wallpapers -->
+<div class="wall" id="wallA"></div>
+<div class="wall" id="wallB"></div>
+<div class="vignette"></div>
+
+<!-- Your normal desktop bar (stand-in). Placement decides whether it
+     stays visible while the selector is open. -->
+<div class="desktopbar" id="desktopbar">
+  <div class="db-left">
+    <span class="db-ws active">1</span>
+    <span class="db-ws">2</span>
+    <span class="db-ws">3</span>
+    <span class="db-ws">4</span>
+    <span class="db-ws">5</span>
+  </div>
+  <div class="db-center">10:42</div>
+  <div class="db-right">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.7" stroke-linecap="round" aria-hidden="true">
+      <path d="M2.5 8.5a15 15 0 0 1 19 0"></path>
+      <path d="M5.5 12a10.5 10.5 0 0 1 13 0"></path>
+      <path d="M8.7 15.4a6 6 0 0 1 6.6 0"></path>
+      <circle cx="12" cy="19" r="1" fill="currentColor" stroke="none"></circle>
+    </svg>
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M4 9v6h4l5 4V5L8 9H4Z"></path>
+      <path d="M17 9.5a4 4 0 0 1 0 5"></path>
+    </svg>
+    <svg width="18" height="14" viewBox="0 0 28 24" fill="none" stroke="currentColor"
+         stroke-width="1.7" aria-hidden="true">
+      <rect x="2" y="6" width="20" height="12" rx="3"></rect>
+      <path d="M24 10v4" stroke-linecap="round"></path>
+      <rect x="4.5" y="8.5" width="13" height="7" rx="1.5" fill="currentColor" stroke="none"></rect>
+    </svg>
+  </div>
+</div>
+
+<div class="ui" id="ui">
+
+  <button class="nav prev" id="prev" aria-label="Previous wallpaper">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="m15 5-7 7 7 7"></path>
+    </svg>
+  </button>
+
+  <button class="nav next" id="next" aria-label="Next wallpaper">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="m9 5 7 7-7 7"></path>
+    </svg>
+  </button>
+
+  <div class="bar is-bottom" id="bar">
+
+    <div class="bar-left">
+      <div class="name-row">
+        <span class="name" id="name">dragon.png</span>
+        <span class="state-pill live" id="statePill"><span class="dot"></span>Live</span>
+      </div>
+      <div class="meta-row" id="metaRow">
+        <span id="meta">3840 × 2160 · 2.4 MB</span>
+        <span class="swatches" id="swatches"></span>
+      </div>
+    </div>
+
+    <div class="bar-mid">
+      <div class="looks-head">
+        Looks <span class="current" id="lookName">Original</span>
+        <kbd>↑</kbd><kbd>↓</kbd>
+      </div>
+      <div class="looks-row" id="looksRow"></div>
+    </div>
+
+    <div class="bar-right">
+      <div class="bar-actions">
+        <button class="gear" id="gearBtn" aria-label="Placement settings" aria-expanded="false">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09A1.7 1.7 0 0 0 9 19.4a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6h.09A1.7 1.7 0 0 0 10 3.05V3a2 2 0 1 1 4 0v.09A1.7 1.7 0 0 0 15 4.6a1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9v.09a1.7 1.7 0 0 0 1.55 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51 1Z"></path>
+          </svg>
+        </button>
+        <button class="set is-live" id="set">
+          <span class="set-fill" id="setFill"></span>
+          <span class="set-text" id="setText">Current wallpaper</span>
+          <kbd id="setKbd" hidden>↵</kbd>
+        </button>
+      </div>
+      <div class="bar-hints">
+        <kbd>Esc</kbd> cancel
+        <span>·</span>
+        <kbd>G</kbd> grid
+        <span>·</span>
+        <kbd>/</kbd> search
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Placement settings. Same grammar as ags-capture-tool:
+       grouped rows, segmented pills, numbered value, immediate save. -->
+  <div class="settings-pop" id="settingsPop" hidden>
+    <div class="sp-head">
+      <span class="title">Settings</span>
+      <span class="sub">Placement</span>
+    </div>
+
+    <div class="sp-row">
+      <div class="sp-label">Control bar</div>
+      <div class="seg" id="segPosition">
+        <button data-value="bottom" class="selected">Bottom</button>
+        <button data-value="top">Top</button>
+      </div>
+    </div>
+
+    <div class="sp-row">
+      <div class="sp-label">
+        Desktop bar
+        <span class="desc">Keep it visible while previewing</span>
+      </div>
+      <div class="seg" id="segDesktop">
+        <button data-value="show" class="selected">Show</button>
+        <button data-value="hide">Hide</button>
+      </div>
+    </div>
+
+    <div class="sp-row" id="offsetRow">
+      <div class="sp-label">
+        Top offset
+        <span class="desc">Extra px below the reserved zone</span>
+      </div>
+      <div class="stepper">
+        <button id="offMinus" aria-label="Decrease top offset">−</button>
+        <span class="val" id="offValue">0</span>
+        <button id="offPlus" aria-label="Increase top offset">+</button>
+      </div>
+    </div>
+
+    <div class="sp-foot">Changes save immediately.</div>
+  </div>
+</div>
+
+<button class="reopen" id="reopen" hidden>Open wallpaper selector</button>
+
+<div class="grid" id="grid" aria-hidden="true">
+  <div class="grid-head">
+    <div class="grid-title">
+      <h2>All wallpapers <span class="n" id="gridCount">8</span></h2>
+      <div class="sub">Pick one to preview it on the desktop. Nothing is applied until you press Set.</div>
+    </div>
+    <div class="grid-tools">
+      <label class="gsearch">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+          <circle cx="11" cy="11" r="7"></circle>
+          <path d="m20 20-3.2-3.2"></path>
+        </svg>
+        <input id="gridSearch" type="text" placeholder="Search wallpapers…" autocomplete="off" spellcheck="false">
+      </label>
+      <button class="icon-btn" id="gridClose" aria-label="Close grid">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.9" stroke-linecap="round" aria-hidden="true">
+          <path d="M6 6l12 12M18 6L6 18"></path>
+        </svg>
+      </button>
+    </div>
+  </div>
+  <div class="grid-scroll">
+    <div class="grid-cards" id="gridCards"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ── sample library ─────────────────────────────────────────────
+   CSS art stands in for real images. In the app the overlay is a
+   full-screen Gtk.Picture (or two, crossfaded) under the chrome. */
+
+const WALLPAPERS = [
+  {
+    id: "dragon", name: "dragon", ext: "PNG", res: "3840 × 2160", size: "2.4 MB",
+    accent: "#ff8a6a",
+    swatches: ["#241633", "#7d2b52", "#ff7a59", "#ffc46b", "#f4e9e2"],
+    art: "radial-gradient(90% 80% at 22% 12%, #5b2f8a 0%, transparent 58%), radial-gradient(70% 70% at 78% 28%, #c23a72 0%, transparent 55%), radial-gradient(60% 50% at 52% 92%, #ff7a59 0%, transparent 60%), linear-gradient(155deg, #0d0716 0%, #241033 45%, #090510 100%)",
+    looks: [
+      { name: "Ember", filter: "hue-rotate(-14deg) saturate(1.3) contrast(1.05)" },
+      { name: "Noir", filter: "hue-rotate(0deg) saturate(0) contrast(1.16)" },
+      { name: "Frost", filter: "hue-rotate(160deg) saturate(.9) contrast(1.05)" }
+    ]
+  },
+  {
+    id: "aurora", name: "aurora", ext: "JPG", res: "5120 × 2880", size: "3.1 MB",
+    accent: "#5eead4",
+    swatches: ["#04110f", "#0f3d3a", "#2dd4bf", "#4ade80", "#c7fff4"],
+    art: "radial-gradient(80% 70% at 18% 78%, #14532d 0%, transparent 60%), radial-gradient(70% 60% at 62% 22%, #2dd4bf 0%, transparent 55%), radial-gradient(55% 45% at 88% 66%, #3b82f6 0%, transparent 58%), linear-gradient(160deg, #03100f 0%, #072422 52%, #020b0a 100%)",
+    looks: [
+      { name: "Glow", filter: "hue-rotate(18deg) saturate(1.22)" },
+      { name: "Deep", filter: "hue-rotate(-28deg) saturate(1.1) contrast(1.1)" },
+      { name: "Mono", filter: "hue-rotate(0deg) saturate(.12) contrast(1.08)" }
+    ]
+  },
+  {
+    id: "wasteland", name: "wasteland", ext: "JPG", res: "3840 × 2160", size: "1.9 MB",
+    accent: "#fbbf24",
+    swatches: ["#140d06", "#3a2410", "#b45309", "#f59e0b", "#fde68a"],
+    art: "radial-gradient(100% 80% at 30% 84%, #b45309 0%, transparent 58%), radial-gradient(70% 60% at 76% 24%, #f59e0b 0%, transparent 52%), radial-gradient(60% 50% at 12% 18%, #7c2d12 0%, transparent 55%), linear-gradient(165deg, #0c0703 0%, #2a1a0a 55%, #080402 100%)",
+    looks: [
+      { name: "Dust", filter: "hue-rotate(6deg) saturate(.82) contrast(1.02)" },
+      { name: "Rust", filter: "hue-rotate(-10deg) saturate(1.32) contrast(1.06)" }
+    ]
+  },
+  {
+    id: "minimal", name: "minimal", ext: "PNG", res: "2560 × 1440", size: "0.8 MB",
+    accent: "#d4d4d8",
+    swatches: ["#0a0a0b", "#18181b", "#3f3f46", "#a1a1aa", "#f4f4f5"],
+    art: "radial-gradient(70% 60% at 68% 26%, #3f3f46 0%, transparent 58%), radial-gradient(50% 50% at 30% 78%, #27272a 0%, transparent 62%), linear-gradient(150deg, #050505 0%, #18181b 55%, #09090b 100%)",
+    looks: []
+  },
+  {
+    id: "cyberpunk", name: "cyberpunk", ext: "JPG", res: "3840 × 2160", size: "2.8 MB",
+    accent: "#22d3ee",
+    swatches: ["#05060f", "#12102b", "#4f46e5", "#e879f9", "#67e8f9"],
+    art: "radial-gradient(75% 65% at 24% 22%, #4f46e5 0%, transparent 58%), radial-gradient(65% 60% at 82% 32%, #e879f9 0%, transparent 54%), radial-gradient(55% 50% at 52% 92%, #22d3ee 0%, transparent 58%), linear-gradient(155deg, #03030a 0%, #12102b 50%, #05060f 100%)",
+    looks: [
+      { name: "Neon", filter: "hue-rotate(0deg) saturate(1.38) contrast(1.04)" },
+      { name: "Vapor", filter: "hue-rotate(28deg) saturate(1.22)" },
+      { name: "Mono", filter: "hue-rotate(0deg) saturate(0) contrast(1.22)" }
+    ]
+  },
+  {
+    id: "tide", name: "tide", ext: "JPG", res: "5120 × 2880", size: "3.6 MB",
+    accent: "#67e8f9",
+    swatches: ["#020710", "#0b2a4a", "#1e3a8a", "#0e7490", "#a5f3fc"],
+    art: "radial-gradient(90% 70% at 20% 80%, #0e7490 0%, transparent 58%), radial-gradient(70% 60% at 74% 24%, #1e3a8a 0%, transparent 55%), radial-gradient(50% 45% at 46% 50%, #155e75 0%, transparent 60%), linear-gradient(160deg, #020710 0%, #071a33 52%, #01040a 100%)",
+    looks: []
+  },
+  {
+    id: "moss", name: "moss", ext: "PNG", res: "3840 × 2160", size: "2.1 MB",
+    accent: "#a3e635",
+    swatches: ["#080d05", "#12200a", "#4d7c0f", "#166534", "#d9f99d"],
+    art: "radial-gradient(85% 75% at 26% 18%, #166534 0%, transparent 58%), radial-gradient(65% 60% at 78% 70%, #4d7c0f 0%, transparent 55%), radial-gradient(50% 45% at 60% 40%, #a3e635 0%, transparent 62%), linear-gradient(160deg, #040702 0%, #12200a 52%, #060a03 100%)",
+    looks: [
+      { name: "Dusk", filter: "hue-rotate(-18deg) saturate(.9) contrast(1.04)" },
+      { name: "Sun", filter: "hue-rotate(32deg) saturate(1.26) contrast(1.05)" }
+    ]
+  },
+  {
+    id: "ember", name: "ember", ext: "JPG", res: "3840 × 2160", size: "2.6 MB",
+    accent: "#fb923c",
+    swatches: ["#120404", "#3a0a06", "#b91c1c", "#ea580c", "#fbbf24"],
+    art: "radial-gradient(90% 80% at 24% 82%, #ea580c 0%, transparent 56%), radial-gradient(70% 65% at 76% 26%, #b91c1c 0%, transparent 54%), radial-gradient(55% 45% at 48% 42%, #f59e0b 0%, transparent 60%), linear-gradient(160deg, #0a0202 0%, #2a0a06 52%, #060101 100%)",
+    looks: [
+      { name: "Ash", filter: "hue-rotate(0deg) saturate(.38) contrast(1.1)" },
+      { name: "Magma", filter: "hue-rotate(-8deg) saturate(1.36) contrast(1.06)" },
+      { name: "Gold", filter: "hue-rotate(24deg) saturate(1.16) contrast(1.02)" }
+    ]
+  }
+];
+
+/* ── state ─────────────────────────────────────────────────────── */
+
+let index = 0;                 // always indexes WALLPAPERS
+let lookIndex = 0;             // 0 = Original
+let liveId = "dragon";
+let liveLook = 0;
+let committing = false;
+let commitProgress = 0;
+let statusText = "";
+let gridOpen = false;
+let gridQuery = "";
+let closed = false;
+let commitCloseTimer = null;
+let toastTimer = null;
+let front = 0;                 // which wall layer is on top
+
+/* Placement settings: the selector's own config, the same shape the
+   capture tool persists to $XDG_CONFIG_HOME/capture-tool/config.json.
+   Here localStorage stands in for that file. */
+const SETTINGS_KEY = "wallpaper-selector.settings";
+const DEFAULT_SETTINGS = { position: "bottom", desktopBar: "show", offset: 0 };
+let settings = loadSettings();
+let settingsOpen = false;
+
+const $ = (id) => document.getElementById(id);
+
+const el = {
+  wallA: $("wallA"),
+  wallB: $("wallB"),
+  ui: $("ui"),
+  desktopbar: $("desktopbar"),
+  bar: $("bar"),
+  prev: $("prev"),
+  next: $("next"),
+  name: $("name"),
+  statePill: $("statePill"),
+  metaRow: $("metaRow"),
+  meta: $("meta"),
+  swatches: $("swatches"),
+  looksRow: $("looksRow"),
+  lookName: $("lookName"),
+  set: $("set"),
+  setFill: $("setFill"),
+  setText: $("setText"),
+  setKbd: $("setKbd"),
+  gearBtn: $("gearBtn"),
+  settingsPop: $("settingsPop"),
+  segPosition: $("segPosition"),
+  segDesktop: $("segDesktop"),
+  offsetRow: $("offsetRow"),
+  offMinus: $("offMinus"),
+  offPlus: $("offPlus"),
+  offValue: $("offValue"),
+  reopen: $("reopen"),
+  grid: $("grid"),
+  gridCards: $("gridCards"),
+  gridCount: $("gridCount"),
+  gridSearch: $("gridSearch"),
+  gridClose: $("gridClose"),
+  toast: $("toast")
+};
+
+const walls = [el.wallA, el.wallB];
+const ORIGINAL = { name: "Original", filter: "hue-rotate(0deg) saturate(1) contrast(1)" };
+
+/* ── helpers ───────────────────────────────────────────────────── */
+
+const allLooks = (w) => [ORIGINAL, ...w.looks];
+const current = () => WALLPAPERS[index];
+const currentLook = (w) => allLooks(w)[lookIndex] ?? ORIGINAL;
+const isLiveItem = (w) => w.id === liveId && lookIndex === liveLook;
+const wrap = (n, len) => ((n % len) + len) % len;
+const pad = (n) => String(n).padStart(2, "0");
+const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+function toast(html) {
+  el.toast.innerHTML = html;
+  el.toast.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.toast.classList.remove("show"), 2400);
+}
+
+function setLookFilter(filter) {
+  document.documentElement.style.setProperty("--look-filter", filter);
+}
+
+/* Crossfade the whole screen between two wallpaper layers.
+   A (bottom) stays opaque; B (top) fades in when it becomes the
+   incoming layer, or fades out to reveal a newly-loaded A.
+   That avoids the brightness dip of fading both at once. */
+function showArt(art, animate = true) {
+  if (!animate) {
+    const visible = walls[front];
+    visible.style.transition = "none";
+    visible.style.backgroundImage = art;
+    visible.style.opacity = "1";
+    walls[1 - front].style.opacity = "0";
+    void visible.offsetWidth;
+    visible.style.transition = "";
+    front = 0;
+    walls[0].style.opacity = "1";
+    walls[1].style.opacity = "0";
+    walls[0].style.backgroundImage = art;
+    return;
+  }
+
+  const incomingIsTop = (1 - front) === 1;
+  const incoming = walls[1 - front];
+  incoming.style.backgroundImage = art;
+
+  if (incomingIsTop) {
+    /* top layer fades in over the opaque bottom layer */
+    incoming.style.opacity = "1";
+  } else {
+    /* bottom layer is already opaque; fade the top layer out to reveal it */
+    incoming.style.opacity = "1";
+    walls[front].style.opacity = "0";
+  }
+
+  front = 1 - front;
+}
+
+function applyWallpaper(w, lookIndexForWall = 0, animate = true) {
+  const look = allLooks(w)[lookIndexForWall] ?? ORIGINAL;
+  setLookFilter(look.filter);
+  showArt(w.art, animate);
+}
+
+/* ── placement settings ────────────────────────────────────────── */
+
+function loadSettings() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}");
+    return {
+      position: raw.position === "top" ? "top" : "bottom",
+      desktopBar: raw.desktopBar === "hide" ? "hide" : "show",
+      offset: Number.isFinite(raw.offset) ? Math.max(0, Math.round(raw.offset)) : 0,
+    };
+  } catch {
+    return { ...DEFAULT_SETTINGS };
+  }
+}
+
+function saveSettings() {
+  try {
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+  } catch {
+    /* storage unavailable: the session still works, it just will not persist */
+  }
+}
+
+function applySettings() {
+  const hideDesktop = settings.desktopBar === "hide" && !closed;
+  const base = hideDesktop ? 14 : 54;
+  const top = base + (settings.position === "top" ? settings.offset : 0);
+
+  document.documentElement.style.setProperty("--bar-top", `${top}px`);
+  el.desktopbar.classList.toggle("is-hidden", hideDesktop);
+  el.bar.classList.toggle("is-top", settings.position === "top");
+  el.bar.classList.toggle("is-bottom", settings.position === "bottom");
+
+  updateSettingsUI();
+  if (settingsOpen) positionSettingsPop();
+}
+
+function updateSettingsUI() {
+  const setSeg = (group, value) => {
+    for (const button of group.querySelectorAll("button[data-value]")) {
+      button.classList.toggle("selected", button.dataset.value === value);
+    }
+  };
+  setSeg(el.segPosition, settings.position);
+  setSeg(el.segDesktop, settings.desktopBar);
+  el.offValue.textContent = String(settings.offset);
+  el.offsetRow.classList.toggle("is-disabled", settings.position !== "top");
+}
+
+function positionSettingsPop() {
+  const barRect = el.bar.getBoundingClientRect();
+  const gearRect = el.gearBtn.getBoundingClientRect();
+  const pop = el.settingsPop;
+
+  pop.style.right = `${Math.max(12, window.innerWidth - gearRect.right)}px`;
+  pop.style.left = "auto";
+
+  if (settings.position === "bottom") {
+    pop.style.bottom = `${Math.max(12, window.innerHeight - barRect.top + 10)}px`;
+    pop.style.top = "auto";
+  } else {
+    pop.style.top = `${barRect.bottom + 10}px`;
+    pop.style.bottom = "auto";
+  }
+}
+
+function openSettings() {
+  settingsOpen = true;
+  el.settingsPop.hidden = false;
+  el.gearBtn.classList.add("is-active");
+  el.gearBtn.setAttribute("aria-expanded", "true");
+  updateSettingsUI();
+  positionSettingsPop();
+}
+
+function closeSettings() {
+  settingsOpen = false;
+  el.settingsPop.hidden = true;
+  el.gearBtn.classList.remove("is-active");
+  el.gearBtn.setAttribute("aria-expanded", "false");
+}
+
+/* ── render the bar ────────────────────────────────────────────── */
+
+function render() {
+  const w = current();
+  const looks = allLooks(w);
+  lookIndex = Math.min(lookIndex, looks.length - 1);
+  const look = looks[lookIndex];
+  const live = isLiveItem(w);
+
+  document.documentElement.style.setProperty("--accent", w.accent);
+
+  el.name.textContent = `${w.name}.${w.ext.toLowerCase()}`;
+  el.meta.textContent = statusText || `${w.res} · ${w.size}`;
+  el.metaRow.classList.toggle("is-step", Boolean(statusText));
+
+  el.swatches.innerHTML = w.swatches
+    .map((c) => `<span class="swatch" style="background:${c}" title="${c}"></span>`)
+    .join("");
+
+  /* state pill */
+  el.statePill.className = "state-pill" + (committing ? " setting" : live ? " live" : "");
+  el.statePill.innerHTML = committing
+    ? "Setting…"
+    : live
+      ? '<span class="dot"></span>Live'
+      : "Preview";
+
+  /* looks */
+  el.lookName.textContent = w.looks.length === 0 ? "none yet" : look.name;
+  el.looksRow.innerHTML = looks
+    .map((l, i) => {
+      const selected = i === lookIndex ? " is-selected" : "";
+      const liveLookClass = w.id === liveId && i === liveLook ? " is-live" : "";
+      return `<button class="look${selected}${liveLookClass}" data-look="${i}"
+        title="${l.name}" aria-label="${l.name}"
+        style="background-image:${w.art}; filter:${l.filter}"></button>`;
+    })
+    .join("");
+
+  if (w.looks.length === 0) {
+    el.looksRow.insertAdjacentHTML(
+      "beforeend",
+      '<div class="looks-empty">No looks yet — generated on first set.</div>'
+    );
+  }
+
+  /* commit button + progress + disabled nav */
+  el.bar.classList.toggle("is-busy", committing);
+  el.bar.style.setProperty("--p", String(commitProgress));
+  el.setFill.style.setProperty("--p", String(commitProgress));
+
+  el.set.classList.toggle("is-live", live && !committing);
+  el.set.classList.toggle("is-committing", committing);
+  el.set.disabled = live || committing;
+
+  el.prev.disabled = committing;
+  el.next.disabled = committing;
+
+  el.looksRow.style.opacity = committing ? ".45" : "";
+  el.looksRow.style.pointerEvents = committing ? "none" : "";
+
+  if (committing) {
+    el.setText.textContent = "Setting wallpaper…";
+    el.setKbd.hidden = true;
+  } else if (live) {
+    el.setText.textContent = "Current wallpaper";
+    el.setKbd.hidden = true;
+  } else {
+    el.setText.textContent = "Set wallpaper";
+    el.setKbd.hidden = false;
+  }
+}
+
+/* ── navigation ────────────────────────────────────────────────── */
+
+function navigate(delta) {
+  if (committing || closed) return;
+  index = wrap(index + delta, WALLPAPERS.length);
+  lookIndex = 0;
+  applyWallpaper(current(), 0, true);
+  render();
+}
+
+function selectLook(i) {
+  if (committing) return;
+  lookIndex = i;
+  const w = current();
+  setLookFilter(allLooks(w)[i].filter);
+  render();
+}
+
+function stepLook(delta) {
+  if (committing) return;
+  const w = current();
+  const looks = allLooks(w);
+  if (looks.length < 2) {
+    toast(`No looks yet for <b>${w.name}</b> — set it once and they are generated.`);
+    return;
+  }
+  lookIndex = wrap(lookIndex + delta, looks.length);
+  setLookFilter(looks[lookIndex].filter);
+  render();
+}
+
+/* ── commit ────────────────────────────────────────────────────── */
+
+async function commit() {
+  if (committing || closed) return;
+  const w = current();
+  if (isLiveItem(w)) return;
+  closeSettings();
+
+  const targetId = w.id;
+  const targetLook = lookIndex;
+  const targetName = w.name;
+  const steps = ["Swapping pixels", "Building palette", "Updating icons"];
+
+  committing = true;
+  commitProgress = 0;
+  statusText = steps[0] + "…";
+  render();
+
+  for (let i = 0; i < steps.length; i += 1) {
+    statusText = steps[i] + "…";
+    render();
+    await wait(700);
+    commitProgress = (i + 1) / steps.length;
+    render();
+  }
+
+  liveId = targetId;
+  liveLook = targetLook;
+  committing = false;
+  commitProgress = 0;
+  statusText = "";
+
+  render();
+  toast(`<span class="t-live">●</span> ${targetName} is live`);
+
+  clearTimeout(commitCloseTimer);
+  commitCloseTimer = setTimeout(() => {
+    if (!committing && !closed) collapseUI();
+  }, 1600);
+}
+
+/* ── close / reopen ────────────────────────────────────────────── */
+
+function collapseUI() {
+  closed = true;
+  closeSettings();
+  el.ui.classList.add("closed");
+  el.reopen.hidden = false;
+  /* the desktop bar is never hidden by a closed selector */
+  applySettings();
+}
+
+function closeSelector(cancel = true) {
+  if (committing) return;
+  clearTimeout(commitCloseTimer);
+  closeGrid();
+
+  if (cancel) {
+    const liveW = WALLPAPERS.find((w) => w.id === liveId) ?? WALLPAPERS[0];
+    applyWallpaper(liveW, liveLook, true);
+    toast("Cancelled — nothing applied");
+  }
+
+  collapseUI();
+}
+
+function openSelector() {
+  clearTimeout(commitCloseTimer);
+  closed = false;
+  el.ui.classList.remove("closed");
+  el.reopen.hidden = true;
+  applySettings();
+
+  index = WALLPAPERS.findIndex((w) => w.id === liveId);
+  if (index < 0) index = 0;
+  lookIndex = liveLook;
+  applyWallpaper(current(), lookIndex, false);
+  render();
+}
+
+/* ── contact sheet ─────────────────────────────────────────────── */
+
+function openGrid() {
+  if (committing || closed) return;
+  closeSettings();
+  gridOpen = true;
+  gridQuery = "";
+  el.gridSearch.value = "";
+  renderGrid();
+  el.ui.classList.add("is-grid");
+  el.grid.classList.add("open");
+  el.grid.setAttribute("aria-hidden", "false");
+  setTimeout(() => el.gridSearch.focus(), 60);
+}
+
+function closeGrid() {
+  if (!gridOpen) return;
+  gridOpen = false;
+  el.grid.classList.remove("open");
+  el.grid.setAttribute("aria-hidden", "true");
+  el.ui.classList.remove("is-grid");
+  el.gridSearch.blur();
+  gridQuery = "";
+  el.gridSearch.value = "";
+}
+
+function renderGrid() {
+  const q = gridQuery.trim().toLowerCase();
+  const items = q
+    ? WALLPAPERS.filter((w) => w.name.toLowerCase().includes(q))
+    : WALLPAPERS;
+
+  el.gridCount.textContent = String(items.length);
+  const focusedId = current().id;
+
+  el.gridCards.innerHTML = items
+    .map((item) => {
+      const focused = item.id === focusedId ? " is-focused" : "";
+      const live = item.id === liveId ? '<span class="g-live">Live</span>' : "";
+      const looks = item.looks.length === 0
+        ? "no looks yet"
+        : `${item.looks.length} ${item.looks.length === 1 ? "look" : "looks"}`;
+      return `<button class="gcard${focused}" data-id="${item.id}">
+        <span class="g-art" style="background-image:${item.art}">${live}</span>
+        <span class="g-name">${item.name}.${item.ext.toLowerCase()}</span>
+        <span class="g-meta">${item.res} · ${looks}</span>
+      </button>`;
+    })
+    .join("");
+}
+
+/* ── wiring ────────────────────────────────────────────────────── */
+
+el.prev.addEventListener("click", () => navigate(-1));
+el.next.addEventListener("click", () => navigate(1));
+el.set.addEventListener("click", commit);
+el.reopen.addEventListener("click", openSelector);
+el.gridClose.addEventListener("click", closeGrid);
+
+/* placement settings */
+el.gearBtn.addEventListener("click", (event) => {
+  event.stopPropagation();
+  if (settingsOpen) closeSettings();
+  else openSettings();
+});
+
+el.settingsPop.addEventListener("click", (event) => event.stopPropagation());
+
+el.segPosition.addEventListener("click", (event) => {
+  const button = event.target.closest("button[data-value]");
+  if (!button) return;
+  settings.position = button.dataset.value;
+  saveSettings();
+  applySettings();
+  positionSettingsPop();
+});
+
+el.segDesktop.addEventListener("click", (event) => {
+  const button = event.target.closest("button[data-value]");
+  if (!button) return;
+  settings.desktopBar = button.dataset.value;
+  saveSettings();
+  applySettings();
+  positionSettingsPop();
+});
+
+el.offMinus.addEventListener("click", () => {
+  settings.offset = Math.max(0, settings.offset - 1);
+  saveSettings();
+  applySettings();
+  positionSettingsPop();
+});
+
+el.offPlus.addEventListener("click", () => {
+  settings.offset = Math.min(200, settings.offset + 1);
+  saveSettings();
+  applySettings();
+  positionSettingsPop();
+});
+
+document.addEventListener("click", () => {
+  if (settingsOpen) closeSettings();
+});
+
+window.addEventListener("resize", () => {
+  if (settingsOpen) positionSettingsPop();
+});
+
+el.looksRow.addEventListener("click", (event) => {
+  const chip = event.target.closest(".look");
+  if (!chip) return;
+  selectLook(Number(chip.dataset.look));
+});
+
+el.gridSearch.addEventListener("input", () => {
+  gridQuery = el.gridSearch.value;
+  renderGrid();
+});
+
+el.gridCards.addEventListener("click", (event) => {
+  const card = event.target.closest(".gcard");
+  if (!card) return;
+  const i = WALLPAPERS.findIndex((w) => w.id === card.dataset.id);
+  if (i < 0) return;
+  index = i;
+  lookIndex = 0;
+  closeGrid();
+  applyWallpaper(current(), 0, true);
+  render();
+});
+
+window.addEventListener("keydown", (event) => {
+  const typing = event.target.tagName === "INPUT";
+
+  if (event.key === "Escape") {
+    if (settingsOpen) { closeSettings(); return; }
+    if (typing) {
+      event.target.blur();
+      if (gridOpen) {
+        if (gridQuery) {
+          gridQuery = "";
+          el.gridSearch.value = "";
+          renderGrid();
+        } else {
+          closeGrid();
+        }
+      }
+      return;
+    }
+    if (gridOpen) { closeGrid(); return; }
+    if (!closed) closeSelector(true);
+    return;
+  }
+
+  if (typing) {
+    if (event.key === "Enter" && gridOpen) {
+      const first = el.gridCards.querySelector(".gcard");
+      if (first) first.click();
+    }
+    return;
+  }
+
+  if (settingsOpen) return;
+  if (committing || closed) return;
+
+  if (gridOpen) {
+    if (event.key.toLowerCase() === "g") { event.preventDefault(); closeGrid(); }
+    return;
+  }
+
+  if (event.key === "ArrowRight") { event.preventDefault(); navigate(1); return; }
+  if (event.key === "ArrowLeft") { event.preventDefault(); navigate(-1); return; }
+  if (event.key === "ArrowDown") { event.preventDefault(); stepLook(1); return; }
+  if (event.key === "ArrowUp") { event.preventDefault(); stepLook(-1); return; }
+  if (event.key === "Enter") { event.preventDefault(); commit(); return; }
+  if (event.key === "/") { event.preventDefault(); openGrid(); return; }
+  if (event.key.toLowerCase() === "g") { event.preventDefault(); openGrid(); }
+});
+
+/* ── boot ──────────────────────────────────────────────────────── */
+
+/* Deep links: ?w=ember&look=2&view=grid|closed&commit=1 */
+const params = new URLSearchParams(location.search);
+const wantedId = params.get("w");
+if (wantedId) {
+  const found = WALLPAPERS.findIndex((w) => w.id === wantedId);
+  if (found >= 0) index = found;
+}
+const wantedLook = Number(params.get("look"));
+if (Number.isInteger(wantedLook) && wantedLook > 0) lookIndex = wantedLook;
+
+/* Placement deep links: ?bar=top|bottom&desktop=show|hide&offset=N */
+const wantedBar = params.get("bar");
+if (wantedBar === "top" || wantedBar === "bottom") settings.position = wantedBar;
+const wantedDesktop = params.get("desktop");
+if (wantedDesktop === "show" || wantedDesktop === "hide") settings.desktopBar = wantedDesktop;
+const wantedOffset = Number(params.get("offset"));
+if (Number.isFinite(wantedOffset)) settings.offset = Math.max(0, Math.round(wantedOffset));
+
+applyWallpaper(current(), lookIndex, false);
+render();
+applySettings();
+
+if (params.get("view") === "grid") openGrid();
+if (params.get("view") === "closed") closeSelector(false);
+if (params.get("settings") === "1") setTimeout(openSettings, 120);
+if (params.get("commit") === "1") setTimeout(commit, 100);
+</script>
+</body>
+</html>

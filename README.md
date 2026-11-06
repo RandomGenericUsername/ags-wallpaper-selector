@@ -19,6 +19,14 @@ root **is** the app package.
 deployed config link, requires `manifest.instance == app.tsx instanceName ==
 ags list`, and requires `manifest.configDir == the deployed link basename`.
 
+## Design contract
+
+The next design is the full-monitor desktop overlay specified in
+[tickets/REQ-005-overlay-redesign/ticket.md](tickets/REQ-005-overlay-redesign/ticket.md);
+open [tickets/REQ-005-overlay-redesign/mock.html](tickets/REQ-005-overlay-redesign/mock.html)
+in a browser (no build step). The centered dialog described below is the live
+v0.4.x behavior, not the target.
+
 ## What it does
 
 The selector is a centered, on-demand dialog:
@@ -41,6 +49,10 @@ Read-only inputs, owned by the runtime:
 
 Writable state stays outside the installed tag (AD-37). The selector writes
 only its own thumbnail cache under `$XDG_CACHE_HOME`.
+
+- UI settings: `$XDG_CONFIG_HOME/wallpaper-selector/config.json` (app-owned
+  placement; never under the AGS config link
+  `$XDG_CONFIG_HOME/ags-wallpaper-selector`).
 
 ## `palette-refresh`
 
