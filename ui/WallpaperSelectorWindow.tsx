@@ -77,16 +77,16 @@ export function WallpaperSelectorWindow(
   // sensitivity on every busy transition.
   const applyControls: Gtk.Button[] = [];
 
-  // Layout metrics are TSX-owned v2 tokens. The fallbacks match the bundled
-  // `style.css` glass values, so a missing appearance generation keeps today's
-  // size; a skin change updates the same root in place.
+  // Layout metrics are TSX-owned v2 tokens. The fallbacks are the pre-v2
+  // window defaults (960×640), matching the assets manifest; a skin change
+  // updates the same root in place.
   const rootWidth = appearance.value(
     "layout.ags-wallpaper-selector.root-width",
-    920,
+    960,
   );
   const rootHeight = appearance.value(
     "layout.ags-wallpaper-selector.root-height",
-    600,
+    640,
   );
 
   // Magnifier from the platform IconProvider (AD-4/AD-7): the shared

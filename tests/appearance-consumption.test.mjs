@@ -172,11 +172,11 @@ test("no new request command is added and wallpaper.state stays progress-only", 
 test("the app reads its namespaced layout tokens with fallbacks", () => {
   assert.match(
     CLEAN_WINDOW,
-    /appearance\.value\(\s*"layout\.ags-wallpaper-selector\.root-width",\s*920,?\s*\)/s,
+    /appearance\.value\(\s*"layout\.ags-wallpaper-selector\.root-width",\s*960,?\s*\)/s,
   );
   assert.match(
     CLEAN_WINDOW,
-    /appearance\.value\(\s*"layout\.ags-wallpaper-selector\.root-height",\s*600,?\s*\)/s,
+    /appearance\.value\(\s*"layout\.ags-wallpaper-selector\.root-height",\s*640,?\s*\)/s,
   );
   assert.match(
     CLEAN_WINDOW,

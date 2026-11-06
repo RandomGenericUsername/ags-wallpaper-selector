@@ -69,9 +69,10 @@ restarts the process.
 ## Layout tokens
 
 The app consumes its namespaced v2 metrics in TSX:
-`appearance.value("layout.ags-wallpaper-selector.root-width", 920)` and
-`appearance.value("layout.ags-wallpaper-selector.root-height", 600)` drive the
-root size request. The literals stay in `style.css` only as the bundled glass
+`appearance.value("layout.ags-wallpaper-selector.root-width", 960)` and
+`appearance.value("layout.ags-wallpaper-selector.root-height", 640)` drive the
+root size request; the `960×640` fallbacks are the pre-v2 window defaults. The
+`920px` / `600px` glass minimum in `style.css` remains the bundled CSS
 fallback; templates never expand layout tokens into CSS.
 
 ## Local development

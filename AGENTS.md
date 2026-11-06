@@ -82,8 +82,9 @@ is the pure app-owned work and is executed by tests:
   visibility change, no status rewrite, no model reload.
 
 Layout metrics are TSX-owned v2 tokens. This app reads
-`layout.ags-wallpaper-selector.root-width` / `root-height` with their `920` /
-`600` fallbacks; templates never expand them into CSS.
+`layout.ags-wallpaper-selector.root-width` / `root-height` with their `960` /
+`640` fallbacks (the pre-v2 window defaults); templates never expand them into
+CSS.
 
 `make conformance` asserts these source invariants and the platform
 `checkAppRepo` template gate. Do not weaken them to make a test pass.

@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Restore the pre-v2 `960×640` window default as the layout-token fallbacks
+  (was `920×600` from the CSS minimums); the assets manifest moves to
+  `960×640` in v0.12.2. The `wallpaper.state` subscription and appearance
+  handler are unchanged.
+
 ## v0.4.0 — 2026-11-06
 
 - Migrate to the v2 Appearance plane: `app.tsx` builds one module-scope
