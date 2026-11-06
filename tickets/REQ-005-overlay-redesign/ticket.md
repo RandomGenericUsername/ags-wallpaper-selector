@@ -48,6 +48,19 @@ grid, gear → Placement (Bottom/Top, desktop bar Show/Hide, offset). Deep links
 The mock is the first source of truth for look and interaction; this ticket is
 the source of truth for invariants, settings, architecture and acceptance.
 
+## Source of truth and drift rule
+
+- Normative mock: `mock.html`; sha256
+  `6f877b971b4b402eaeb2447d6563784dd1a18c137ba619ab5810d10a31373543`
+  (also recorded in `mock.sha256`).
+- This ticket is the **criteria** source of truth; the mock is the **look and
+  interaction** source of truth.
+- Any change to `mock.html` must update this ticket's acceptance/contract
+  **and** `mock.sha256` in the same commit. Any criteria change must update the
+  mock in the same commit. If they disagree, fix one before merging.
+- The app-local ticket + mock are canonical; the composition doc 106 is the
+  batch-level record, and its `spikes/` copy mirrors this mock.
+
 ## Design contract
 
 ## 0. Scope
