@@ -5,8 +5,8 @@
 // This is the repo-local gate the standalone contract requires:
 //   1. `app.manifest.json` is schema-valid and carries the selector identity;
 //   2. app.tsx / window / launcher / keybind agree with that identity;
-//   3. the live appearance-refresh handler uses the v2 helper (whole
-//      appearance apply + search-icon work) and leaves the drawer untouched;
+//   3. the live appearance-refresh handler uses the v3 helper (generation-
+//      bound apply + search-icon work) and leaves the drawer untouched;
 //   4. the shared dev-flow template (AGENTS, tickets, guard, Makefile, CI,
 //      tests, templates/ags-app) is present and the platform's own
 //      `checkAppRepo` template gate passes;
@@ -242,7 +242,7 @@ test("the frozen copyable template is present for the next app", () => {
   }
 });
 
-test("the contracts v0.7.0 manifest schema agrees with the platform", () => {
+test("the contracts v0.8.0 manifest schema agrees with the platform", () => {
   const contractsRoot = findContractsRoot();
   assert.notEqual(contractsRoot, null, "cannot find contracts (set CONTRACTS_ROOT)");
   const schema = JSON.parse(
@@ -261,15 +261,15 @@ test("the contracts v0.7.0 manifest schema agrees with the platform", () => {
   );
 });
 
-test("the Makefile pins the v0.9.0 platform / v0.7.0 contracts tuple", () => {
+test("the Makefile pins the v1.0.0 platform / v0.8.0 contracts tuple", () => {
   const makefile = readText("Makefile");
-  assert.match(makefile, /^AGS_PLATFORM_VERSION := v0\.9\.0$/m);
-  assert.match(makefile, /^CONTRACTS_VERSION := v0\.7\.0$/m);
+  assert.match(makefile, /^AGS_PLATFORM_VERSION := v1\.0\.0$/m);
+  assert.match(makefile, /^CONTRACTS_VERSION := v0\.8\.0$/m);
 });
 
 // ── 3. The live handler is real and non-destructive ────────────────────────
 
-test("app.tsx registers the v2 appearance-refresh handler", () => {
+test("app.tsx registers the v3 appearance-refresh handler", () => {
   const app = readText("app.tsx");
   assert.match(
     app,
@@ -286,7 +286,7 @@ test("app.tsx registers the v2 appearance-refresh handler", () => {
   );
 });
 
-test("the handler work uses the platform's v2 refresh helper", () => {
+test("the handler work uses the platform's v3 refresh helper", () => {
   const app = readText("app.tsx");
   assert.match(
     app,
@@ -294,6 +294,11 @@ test("the handler work uses the platform's v2 refresh helper", () => {
   );
   assert.match(app, /createAppearanceRefreshHandler\(appearance,\s*\(\)\s*=>/);
   assert.equal((stripComments(app).match(/requestHandler\s*:/g) ?? []).length, 1);
+  assert.doesNotMatch(
+    stripComments(app),
+    /palette-refresh|PALETTE_REFRESH_COMMAND/,
+    "the v2 palette-refresh protocol must not remain in the app source",
+  );
 });
 
 test("the app-owned refresh rebuilds only the search icon", () => {
@@ -324,7 +329,7 @@ test("the search-icon refresh preserves the drawer", () => {
     assert.equal(
       refresh.includes(forbidden),
       false,
-      `palette refresh must not touch drawer state: found ${forbidden}`,
+      `appearance refresh must not touch drawer state: found ${forbidden}`,
     );
   }
 });

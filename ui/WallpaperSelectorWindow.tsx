@@ -15,7 +15,7 @@ import { createEffect, createState } from "ags";
 // The ONE event client (spine AD-5): the app-local event-bus copies are gone,
 // so the selector consumes `wallpaper.state` through the platform's shared Gio
 // transport + subscribe-before-read core. The event is progress/busy status
-// only; appearance application is the runtime's `palette-refresh` command (AD-27).
+// only; appearance application is the runtime's `appearance-refresh` command (AD-27).
 import { domainEvents } from "ags-platform/adapters/event-bus";
 // The platform IconProvider (spine AD-4/AD-7): the shared registry-backed
 // provider replaces the app-local icon-registry.ts copy.
@@ -48,7 +48,7 @@ function hideWindow(): void {
 
 /**
  * Registry-backed chrome refresher, registered by the one selector window and
- * called from the app-level `palette-refresh` handler. It re-renders only the
+ * called from the app-level `appearance-refresh` handler. It re-renders only the
  * palette-derived search icon; it never rescans, hides or rebuilds the drawer.
  */
 let refreshChrome: (() => void) | null = null;
@@ -541,9 +541,10 @@ export function WallpaperSelectorWindow(
     }
   }
 
-  // Appearance-derived chrome refresh (runtime `palette-refresh`, AD-27): the
-  // whole appearance is applied by the app-level handler; this rebuilds the
-  // registry-backed search icon without touching the drawer or list.
+  // Appearance-derived chrome refresh (runtime `appearance-refresh`, AD-27):
+  // the requested generation is applied by the app-level handler; this
+  // rebuilds the registry-backed search icon without touching the drawer or
+  // list.
   function refreshSelectorChrome(): void {
     const old = searchRow.get_first_child();
     if (old !== null) searchRow.remove(old);

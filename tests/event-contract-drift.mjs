@@ -8,7 +8,7 @@
 // transport (no live bus), and asserts the structural facts the standalone
 // extraction keeps: the window consumes the ONE platform event client +
 // IconProvider (no app-local event-bus / icon-registry copies) and the app
-// registers the v2 appearance refresh helper through the platform adapter.
+// registers the v3 appearance refresh helper through the platform adapter.
 // Executed, never text-scanned -- except the structural source read, which is
 // labelled as such.
 //
@@ -270,7 +270,7 @@ check(
   true,
 );
 check(
-  "app registers the v2 appearance refresh helper",
+  "app registers the v3 appearance refresh helper",
   /createAppearanceRefreshHandler\(appearance,/.test(appSource),
   true,
 );

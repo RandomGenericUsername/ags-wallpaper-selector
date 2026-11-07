@@ -54,15 +54,16 @@ only its own thumbnail cache under `$XDG_CACHE_HOME`.
   placement; never under the AGS config link
   `$XDG_CONFIG_HOME/ags-wallpaper-selector`).
 
-## `palette-refresh`
+## `appearance-refresh`
 
-The runtime invokes `ags request palette-refresh <appearance-hash> -i
-wallpaper-selector` after an appearance change. The app registers the v2
+The runtime invokes `ags request appearance-refresh <genHash> -i
+wallpaper-selector` after a generation is committed. The app registers the v3
 platform handler, wrapped with the standalone invariants:
 
-1. `appearance.apply()` re-reads the current generation and installs the whole
-   palette + skin + mode sheet (`$XDG_CONFIG_HOME/ags-wallpaper-selector/`
-   `appearance.css` through `current/appearance`);
+1. `createAppearance({ configDir: "ags-wallpaper-selector" })` reads
+   `$XDG_STATE_HOME/dotfiles/current/manifest.json` plus
+   `current/appearance/ags-wallpaper-selector.css` and installs that one
+   palette + skin + mode provider;
 2. the app-owned work rebuilds the registry-backed search icon from the new
    palette.
 
@@ -73,10 +74,11 @@ added.
 
 The handler is `createAppearanceRefreshHandler(appearance, work)` from
 `ags-platform/adapters/appearance`. It answers with exactly one JSON-encoded
-string (`{"ok":true}` or a protocol failure) via the platform helper. A
-same-hash trigger re-applies the (coalesced) appearance but does not rerun the
-icon work; a thrown apply is a retryable failure. A wallpaper change never
-restarts the process.
+string naming the requested generation (`{"applied":"<genHash>"}`, `deferred`
+or `failed`); the retired v2 `{"ok":true}` ack is neither produced nor
+accepted. A repeated generation re-verifies `current` but does not rerun the
+icon work; a moved `current` is deferred and a thrown apply is a retryable
+failure. A wallpaper change never restarts the process.
 
 ## Layout tokens
 
@@ -89,7 +91,7 @@ fallback; templates never expand layout tokens into CSS.
 
 ## Local development
 
-The program tuple is `ags-platform` v0.9.0 / `contracts` v0.7.0. Those tags are
+The program tuple is `ags-platform` v1.0.0 / `contracts` v0.8.0. Those tags are
 local-only in this run; the local gates use gitignored symlinks under `.dev/`.
 
 ```sh

@@ -1,11 +1,12 @@
 .PHONY: help platform-dev contracts-dev deps types test conformance drift ci bundle typecheck gates clean
 
-# The program tuple this app builds/tests against (AD-31/AD-34). v0.9.0 is the
-# unified Appearance adapter this app consumes; contracts v0.7.0 is its frozen
-# appearance vocabulary. The tuple is LOCAL-ONLY in this run: local gates symlink
-# it from .dev/ (gitignored), CI checks out the tags explicitly once published.
-AGS_PLATFORM_VERSION := v0.9.0
-CONTRACTS_VERSION := v0.7.0
+# The program tuple this app builds/tests against (AD-31/AD-34). Platform
+# v1.0.0 is the Generations v3 adapter runtime this app consumes; contracts
+# v0.8.0 freezes the generation-bound appearance-refresh protocol. The tuple is
+# LOCAL-ONLY in this run: local gates symlink it from .dev/ (gitignored), CI
+# checks out the tags explicitly once published.
+AGS_PLATFORM_VERSION := v1.0.0
+CONTRACTS_VERSION := v0.8.0
 AGS_PLATFORM_REPO := https://github.com/RandomGenericUsername/ags-platform.git
 CONTRACTS_REPO := https://github.com/RandomGenericUsername/contracts.git
 AGS_PLATFORM_DEV ?=
@@ -25,8 +26,8 @@ help:
 	@echo "make gates        all local gates: test + conformance + drift + bundle + typecheck"
 	@echo ""
 	@echo "Local-only tuple: put a checkout/symlink at"
-	@echo "  .dev/ags-platform/v0.9.0  (or AGS_PLATFORM_DEV=/path/to/ags-platform)"
-	@echo "  .dev/contracts/v0.7.0     (or CONTRACTS_ROOT=/path/to/contracts)"
+	@echo "  .dev/ags-platform/v1.0.0  (or AGS_PLATFORM_DEV=/path/to/ags-platform)"
+	@echo "  .dev/contracts/v0.8.0     (or CONTRACTS_ROOT=/path/to/contracts)"
 
 # The platform shortcut. It MUST point outside node_modules: Node refuses to
 # type-strip `.ts` under a real node_modules directory, but realpaths a symlink
@@ -113,7 +114,7 @@ conformance: platform-dev contracts-dev
 	CONTRACTS_ROOT="$(CONTRACTS_ROOT)" node --test tests/app-contract.test.mjs
 
 # Contract drift: the shared event client and the selector's structural
-# consumption against the canonical contracts v0.7.0 checkout. Stock runner.
+# consumption against the canonical contracts v0.8.0 checkout. Stock runner.
 drift: platform-dev contracts-dev
 	@command -v node >/dev/null || { echo "FAIL: drift: node is not on PATH" >&2; exit 1; }
 	@[ -f "$(CONTRACTS_ROOT)/event-contract.json" ] || { \

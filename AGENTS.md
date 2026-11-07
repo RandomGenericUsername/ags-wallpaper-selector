@@ -31,9 +31,9 @@ mode=live               holdsUnsavedState=false
   keybind description: “Open wallpaper selector” (SUPER+W).
 - No app imports another app. Depend on `ags-platform` (and `contracts` at test
   time only), never on a sibling app repo.
-- The runtime is the only palette-refresh trigger. Do not subscribe to
-  `wallpaper.state` for palette application and do not invent a palette event.
-  `wallpaper.state` is progress/busy status only.
+- The runtime is the only `appearance-refresh` trigger. Do not subscribe to
+  `wallpaper.state` for appearance application and do not invent an appearance
+  event. `wallpaper.state` is progress/busy status only.
 
 ## 3. Ticket flow
 
@@ -62,20 +62,25 @@ no self-hosted runner and no CI secret dependency.
 - `make bundle` — LOCAL: `ags bundle app.tsx build/ags-wallpaper-selector.js`.
 - `make gates` — all of the above.
 
-The program tuple is `ags-platform` v0.9.0 / `contracts` v0.7.0, local-only in
+The program tuple is `ags-platform` v1.0.0 / `contracts` v0.8.0, local-only in
 this run. `.dev/` is gitignored; never commit a fetched platform,
 `node_modules/`, `@girs/`, generated `tsconfig.json` or bundle output.
 
 ## 5. Live refresh invariants
 
-Platform v0.9.0's `createAppearanceRefreshHandler` owns the
-`palette-refresh` transport and the appearance-hash ledger. `lib/appearance.ts`
-is the pure app-owned work and is executed by tests:
+Platform v1.0.0's `createAppearanceRefreshHandler` owns the
+`appearance-refresh <genHash>` transport and the generation-bound ledger;
+`createAppearance` reads `current/manifest.json` and
+`current/appearance/<configDir>.css` behind the one `current` hop.
+`lib/appearance.ts` is the pure app-owned work and is executed by tests:
 
-- exactly one JSON-string response per request, through the platform helper;
-- the helper always re-applies the WHOLE appearance before the app work; a
-  repeated hash re-applies the appearance but does not rerun the work, and a
-  thrown apply is not recorded as applied;
+- exactly one JSON-string response per request, through the platform helper,
+  naming the REQUESTED generation;
+- the helper installs that exact generation before the app work; a repeated
+  generation re-verifies `current` but does not rerun the work, and a thrown
+  apply stays retryable and is not recorded as applied;
+- a request naming a generation that is no longer `current` is deferred and
+  installs nothing;
 - the app work rebuilds only the registry-backed search icon (the platform
   apply refreshes the appearance cache);
 - the drawer is preserved: no rescan, no query reset, no selection change, no

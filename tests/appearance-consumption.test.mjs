@@ -1,10 +1,11 @@
-// Source-level gate for REQ-003: consume the v2 Appearance plane.
+// Source-level gate for REQ-003/REQ-006: consume the Generations v3 plane.
 //
-// Platform v0.9.0 exports `createAppearance({ configDir })` and
+// Platform v1.0.0 exports `createAppearance({ configDir })` and
 // `createAppearanceRefreshHandler(appearance, work)`. The adapter owns the one
-// provider and the one monitor on `$XDG_STATE_HOME/dotfiles/current/appearance`,
-// and the refresh helper always re-applies the whole appearance before the
-// app-owned work. This app only has to:
+// provider and the one monitor on `$XDG_STATE_HOME/dotfiles/current`, reads
+// `current/manifest.json` + `current/appearance/<configDir>.css`, and the
+// refresh helper installs the requested generation before the app-owned work.
+// This app only has to:
 //
 //   1. build ONE module-scope Appearance for its own configDir and apply it in
 //      `main()` (no separate Theme/Skin applies);
@@ -164,6 +165,7 @@ test("the one request handler is createAppearanceRefreshHandler(appearance, work
 test("no new request command is added and wallpaper.state stays progress-only", () => {
   assert.doesNotMatch(CLEAN, /argv\[0\]/);
   assert.doesNotMatch(CLEAN, /PALETTE_REFRESH_COMMAND/);
+  assert.doesNotMatch(CLEAN, /palette-refresh/);
   assert.match(WINDOW, /WALLPAPER_STATE_TOPIC\s*=\s*"wallpaper\.state"/);
   assert.match(WINDOW, /domainEvents\.subscribe\(WALLPAPER_STATE_TOPIC/);
   assert.doesNotMatch(WINDOW, /theme\.apply|skin\.apply|appearance\.apply/);

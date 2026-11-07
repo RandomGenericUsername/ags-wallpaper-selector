@@ -1,5 +1,20 @@
 # Changelog
 
+## v0.5.0 — 2026-11-07
+
+- Move the local tuple to `ags-platform` v1.0.0 / `contracts` v0.8.0
+  (Generations v3; runtime v1.0.0). CI checks out the same tags.
+- `createAppearance({ configDir: "ags-wallpaper-selector" })` now reads
+  `current/manifest.json` + `current/appearance/ags-wallpaper-selector.css`
+  behind the one `current` hop; `appearance.apply()` and the app-scoped
+  provider are unchanged.
+- `createAppearanceRefreshHandler` answers the generation-bound
+  `appearance-refresh <genHash>` protocol; the unit suite asserts the exact-hash
+  response, idempotent work, deferred moved pointer, retryable apply failure
+  and rejection of the retired v2 `palette-refresh` command.
+- The search-icon work, `wallpaper.state` progress subscription and
+  `960` / `640` layout-token fallbacks are unchanged.
+
 ## v0.4.1 — 2026-11-06
 
 - Restore the pre-v2 `960×640` window default as the layout-token fallbacks

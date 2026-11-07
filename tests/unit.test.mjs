@@ -3,22 +3,24 @@
 // AGS/GTK).
 //
 // These execute the app's real pure work module plus the platform's pure
-// Appearance refresh helper the app registers:
+// Generations v3 Appearance refresh helper the app registers:
 //   - the app-owned work rebuilds only the search icon;
-//   - the helper applies the whole appearance before the work;
-//   - appearance apply is repeated per request, work is idempotent by hash;
-//   - a thrown apply stays retryable and does not advance the hash.
+//   - the helper applies the REQUESTED generation before the work;
+//   - the response names that exact generation, one JSON string per request;
+//   - work is idempotent by generation hash, while apply re-verifies `current`;
+//   - a deferred apply runs no work, and a thrown apply stays retryable;
+//   - the retired v2 `palette-refresh` command is rejected.
 //
 // Run from the repo root:  make test
 // ---------------------------------------------------------------------------
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { PALETTE_REFRESH_COMMAND } from "ags-platform/ports/palette-refresh";
 import { createAppearanceRefreshHandler } from "ags-platform/ports/appearance-refresh";
 import { applySelectorAppearance } from "../lib/appearance.ts";
 
-const HASH = "appearance-2026-10-27";
+const HASH = "a".repeat(64);
+const MOVED = "b".repeat(64);
 
 // ── App-owned appearance work ──────────────────────────────────────────────
 
@@ -30,41 +32,84 @@ test("the selector work rebuilds only the search icon", () => {
   assert.deepEqual(calls, ["search-icon"]);
 });
 
-// ── The v2 appearance refresh handler ──────────────────────────────────────
+// ── The v3 generation-bound appearance refresh handler ─────────────────────
 
-test("the handler applies the whole appearance before the app work", () => {
+test("the handler applies the requested generation before the app work", () => {
   const responses = [];
-  const worked = [];
-  let applies = 0;
+  const events = [];
   const handler = createAppearanceRefreshHandler(
-    { apply: () => void (applies += 1) },
-    (hash) => void worked.push(hash),
+    {
+      applyGeneration: (genHash) => {
+        events.push(`apply:${genHash}`);
+        return { status: "applied", genHash };
+      },
+    },
+    (genHash) => {
+      events.push(`work:${genHash}`);
+      return { status: "applied" };
+    },
   );
 
-  handler([PALETTE_REFRESH_COMMAND, HASH], (response) => responses.push(response));
+  handler(["appearance-refresh", HASH], (response) => responses.push(response));
 
-  assert.equal(applies, 1, "appearance.apply() ran before the work");
-  assert.deepEqual(worked, [HASH], "the derived work ran");
+  assert.deepEqual(events, [`apply:${HASH}`, `work:${HASH}`]);
   assert.equal(responses.length, 1, "exactly one response");
   assert.equal(typeof responses[0], "string", "AGS transport is a string");
-  assert.equal(responses[0], JSON.stringify({ ok: true }));
+  assert.equal(responses[0], JSON.stringify({ applied: HASH }));
 });
 
-test("the same hash re-applies appearance but does not rerun app work", () => {
+test("the same generation re-applies current but does not rerun app work", () => {
   const responses = [];
   let applies = 0;
   let worked = 0;
   const handler = createAppearanceRefreshHandler(
-    { apply: () => void (applies += 1) },
-    () => void (worked += 1),
+    {
+      applyGeneration: (genHash) => {
+        applies += 1;
+        return { status: "applied", genHash };
+      },
+    },
+    () => {
+      worked += 1;
+      return { status: "applied" };
+    },
   );
 
-  handler([PALETTE_REFRESH_COMMAND, HASH], (response) => responses.push(response));
-  handler([PALETTE_REFRESH_COMMAND, HASH], (response) => responses.push(response));
+  handler(["appearance-refresh", HASH], (response) => responses.push(response));
+  handler(["appearance-refresh", HASH], (response) => responses.push(response));
 
-  assert.equal(applies, 2, "the whole appearance is always re-applied");
-  assert.equal(worked, 1, "the same hash must not rebuild twice");
-  assert.deepEqual(responses, [JSON.stringify({ ok: true }), JSON.stringify({ ok: true })]);
+  assert.equal(applies, 2, "the requested generation is always re-verified");
+  assert.equal(worked, 1, "the same generation must not rebuild twice");
+  assert.deepEqual(responses, [
+    JSON.stringify({ applied: HASH }),
+    JSON.stringify({ applied: HASH }),
+  ]);
+});
+
+test("a deferred apply answers the requested hash and runs no work", () => {
+  const responses = [];
+  let worked = 0;
+  const handler = createAppearanceRefreshHandler(
+    {
+      applyGeneration: (genHash) => ({
+        status: "deferred",
+        reason: `current generation moved to ${MOVED}`,
+        genHash,
+      }),
+    },
+    () => {
+      worked += 1;
+      return { status: "applied" };
+    },
+  );
+
+  handler(["appearance-refresh", HASH], (response) => responses.push(response));
+
+  assert.equal(worked, 0, "the work must not run without an installed generation");
+  assert.deepEqual(JSON.parse(responses[0]), {
+    deferred: `current generation moved to ${MOVED}`,
+    genHash: HASH,
+  });
 });
 
 test("a thrown appearance apply is retryable and does not advance the hash", () => {
@@ -74,46 +119,82 @@ test("a thrown appearance apply is retryable and does not advance the hash", () 
   let fail = true;
   const handler = createAppearanceRefreshHandler(
     {
-      apply: () => {
+      applyGeneration: (genHash) => {
         applies += 1;
         if (fail) throw new Error("appearance pointer missing");
+        return { status: "applied", genHash };
       },
     },
-    () => void (worked += 1),
+    () => {
+      worked += 1;
+      return { status: "applied" };
+    },
   );
 
-  handler([PALETTE_REFRESH_COMMAND, HASH], (response) => responses.push(response));
+  handler(["appearance-refresh", HASH], (response) => responses.push(response));
   assert.equal(applies, 1);
   assert.equal(worked, 0, "work did not run when the apply failed");
   assert.deepEqual(JSON.parse(responses[0]), {
-    ok: false,
-    error: "appearance pointer missing",
+    failed: "appearance pointer missing",
     retryable: true,
+    genHash: HASH,
   });
 
   fail = false;
-  handler([PALETTE_REFRESH_COMMAND, HASH], (response) => responses.push(response));
+  handler(["appearance-refresh", HASH], (response) => responses.push(response));
   assert.equal(applies, 2);
-  assert.equal(worked, 1, "the failed hash was retried");
-  assert.deepEqual(JSON.parse(responses[1]), { ok: true });
+  assert.equal(worked, 1, "the failed generation was retried");
+  assert.deepEqual(JSON.parse(responses[1]), { applied: HASH });
 });
 
-test("a malformed palette-refresh request never runs the work", () => {
+test("the retired palette-refresh command never runs the work", () => {
   const responses = [];
   let applies = 0;
   let worked = 0;
   const handler = createAppearanceRefreshHandler(
-    { apply: () => void (applies += 1) },
-    () => void (worked += 1),
+    {
+      applyGeneration: () => {
+        applies += 1;
+        return { status: "applied", genHash: HASH };
+      },
+    },
+    () => {
+      worked += 1;
+      return { status: "applied" };
+    },
   );
 
-  handler([PALETTE_REFRESH_COMMAND], (response) => responses.push(response));
-  assert.equal(applies, 0);
+  handler(["palette-refresh", HASH], (response) => responses.push(response));
+  assert.equal(applies, 0, "a v2 command must not apply anything");
   assert.equal(worked, 0);
   assert.equal(responses.length, 1);
   assert.deepEqual(JSON.parse(responses[0]), {
-    ok: false,
-    error: "malformed palette-refresh request",
+    failed: "malformed appearance-refresh request",
     retryable: false,
+    genHash: HASH,
+  });
+});
+
+test("an appearance-refresh request without a generation is malformed", () => {
+  const responses = [];
+  let applies = 0;
+  const handler = createAppearanceRefreshHandler(
+    {
+      applyGeneration: () => {
+        applies += 1;
+        return { status: "applied", genHash: HASH };
+      },
+    },
+    () => ({ status: "applied" }),
+  );
+
+  handler(["appearance-refresh"], (response) => responses.push(response));
+
+  assert.equal(applies, 0);
+  assert.equal(responses.length, 1);
+  assert.deepEqual(JSON.parse(responses[0]), {
+    failed: "malformed appearance-refresh request",
+    retryable: false,
+    genHash: "0".repeat(64),
   });
 });
