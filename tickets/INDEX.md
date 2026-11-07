@@ -15,7 +15,7 @@
 - [REQ-003-appearance-migration/ticket.md](./REQ-003-appearance-migration/ticket.md) — Migrate the wallpaper selector to the v2 Appearance plane | `done` | links: worktree `.worktrees/REQ-003/`, branch `ticket/REQ-003-appearance-migration`; gates green, fast-forward merged to main, tagged v0.4.0
 - [REQ-004-layout-default-size/ticket.md](./REQ-004-layout-default-size/ticket.md) — Restore the pre-v2 960×640 window default fallback | `done` | links: worktree `.worktrees/REQ-004/`, branch `ticket/REQ-004-layout-default-size`; gates green, fast-forward merged to main, tagged v0.4.1
 - [REQ-005-overlay-redesign/ticket.md](./REQ-005-overlay-redesign/ticket.md) — Redesign the wallpaper selector as a full-monitor desktop overlay | `in-progress` | links: worktree `.worktrees/REQ-005/`, branch `ticket/REQ-005-overlay-redesign`; design + normative mock, implementation pending
-- [REQ-006-generations-v3/ticket.md](./REQ-006-generations-v3/ticket.md) — Move the wallpaper selector to Generations v3 | `in-progress` | links: worktree `.worktrees/REQ-006/`, branch `ticket/REQ-006-generations-v3`; platform v1.0.0 / contracts v0.8.0
+- [REQ-006-generations-v3/ticket.md](./REQ-006-generations-v3/ticket.md) — Move the wallpaper selector to Generations v3 | `done` | links: worktree `.worktrees/REQ-006/`, branch `ticket/REQ-006-generations-v3`; gates green, fast-forward merged to main, tagged v0.5.0
 
 ## Bugs
 
