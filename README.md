@@ -91,7 +91,7 @@ fallback; templates never expand layout tokens into CSS.
 
 ## Local development
 
-The program tuple is `ags-platform` v1.0.0 / `contracts` v0.8.0. Those tags are
+The program tuple is `ags-platform` v1.0.1 / `contracts` v0.8.0. Those tags are
 local-only in this run; the local gates use gitignored symlinks under `.dev/`.
 
 ```sh

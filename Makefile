@@ -1,11 +1,11 @@
 .PHONY: help platform-dev contracts-dev deps types test conformance drift ci bundle typecheck gates clean
 
 # The program tuple this app builds/tests against (AD-31/AD-34). Platform
-# v1.0.0 is the Generations v3 adapter runtime this app consumes; contracts
+# v1.0.1 is the Generations v3 adapter runtime this app consumes; contracts
 # v0.8.0 freezes the generation-bound appearance-refresh protocol. The tuple is
 # LOCAL-ONLY in this run: local gates symlink it from .dev/ (gitignored), CI
 # checks out the tags explicitly once published.
-AGS_PLATFORM_VERSION := v1.0.0
+AGS_PLATFORM_VERSION := v1.0.1
 CONTRACTS_VERSION := v0.8.0
 AGS_PLATFORM_REPO := https://github.com/RandomGenericUsername/ags-platform.git
 CONTRACTS_REPO := https://github.com/RandomGenericUsername/contracts.git
@@ -26,7 +26,7 @@ help:
 	@echo "make gates        all local gates: test + conformance + drift + bundle + typecheck"
 	@echo ""
 	@echo "Local-only tuple: put a checkout/symlink at"
-	@echo "  .dev/ags-platform/v1.0.0  (or AGS_PLATFORM_DEV=/path/to/ags-platform)"
+	@echo "  .dev/ags-platform/v1.0.1  (or AGS_PLATFORM_DEV=/path/to/ags-platform)"
 	@echo "  .dev/contracts/v0.8.0     (or CONTRACTS_ROOT=/path/to/contracts)"
 
 # The platform shortcut. It MUST point outside node_modules: Node refuses to

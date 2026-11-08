@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.5.1 — 2026-11-07
+
+- Bump the local-only `ags-platform` pin to `v1.0.1` for dev-pin parity;
+  `contracts` stays `v0.8.0`. CI checks out the same tags.
+- No app behavior change: `app.tsx`, `lib/`, `ui/`, `style.css`, the
+  `appearance-refresh` handler/ack, layout tokens and the `wallpaper.state`
+  progress subscription are untouched.
+
 ## v0.5.0 — 2026-11-07
 
 - Move the local tuple to `ags-platform` v1.0.0 / `contracts` v0.8.0
