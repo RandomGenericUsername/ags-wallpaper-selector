@@ -62,13 +62,13 @@ no self-hosted runner and no CI secret dependency.
 - `make bundle` — LOCAL: `ags bundle app.tsx build/ags-wallpaper-selector.js`.
 - `make gates` — all of the above.
 
-The program tuple is `ags-platform` v1.0.1 / `contracts` v0.8.0, local-only in
+The program tuple is `ags-platform` v1.1.0 / `contracts` v0.12.0, local-only in
 this run. `.dev/` is gitignored; never commit a fetched platform,
 `node_modules/`, `@girs/`, generated `tsconfig.json` or bundle output.
 
 ## 5. Live refresh invariants
 
-Platform v1.0.1's `createAppearanceRefreshHandler` owns the
+Platform v1.1.0's `createAppearanceRefreshHandler` owns the
 `appearance-refresh <genHash>` transport and the generation-bound ledger;
 `createAppearance` reads `current/manifest.json` and
 `current/appearance/<configDir>.css` behind the one `current` hop.
