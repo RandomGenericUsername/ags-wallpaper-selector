@@ -2,7 +2,7 @@
 id: OPS-002
 title: "Bump the dev tuple to ags-platform v1.1.0 / contracts v0.12.0"
 kind: ops-task
-status: in-progress
+status: done
 lane: direct
 links:
   openspec: none
@@ -45,14 +45,26 @@ changes. Historical ticket text, protocol comments in app code and the frozen
 
 ## Evidence
 
-Opening commit `PENDING`; implementation commit `PENDING` on
+Opening commit `618c0f0`; implementation commit `77f8581` on
 `ticket/OPS-002-dev-pin-parity` (worktree `.worktrees/OPS-002/`).
 
 ### Pins
 
-`Evidence:` PENDING.
-`Verify:` `git show PENDING -- Makefile .github/workflows/ci.yml
-tests/app-contract.test.mjs`.
+`Evidence:` `Makefile:8-9` pins `AGS_PLATFORM_VERSION := v1.1.0` and
+`CONTRACTS_VERSION := v0.12.0`; `.github/workflows/ci.yml:38-50` checks out
+`ref: v1.1.0` at `.dev/ags-platform/v1.1.0`, `ref: v0.12.0` at `contracts`,
+and asserts the platform `index.ts`; `tests/app-contract.test.mjs:264-268`
+asserts the tuple; the `appearance-consumption` gate comment names platform
+v1.1.0.
+`Verify:` `git show 77f8581 -- Makefile .github/workflows/ci.yml
+tests/app-contract.test.mjs tests/appearance-consumption.test.mjs`.
+
+`Evidence:` the remaining old-tuple mentions are historical or app-comment
+provenance only: earlier CHANGELOG entries, OPS-001/REQ-002/REQ-006 ticket
+text, and protocol comments in `app.tsx` / `lib/appearance.ts` (app code left
+untouched by this pin-only change).
+`Verify:` `grep -rn "v1\.0\.1\|v0\.8\.0" --exclude-dir=node_modules
+--exclude-dir=.git --exclude-dir=@girs .`.
 
 ### Gates
 
@@ -63,9 +75,38 @@ AGS_PLATFORM_DEV=/home/inumaki/Development/dotfiles/ags-platform \
 CONTRACTS_ROOT=/home/inumaki/Development/dotfiles/contracts make gates
 ```
 
-`Evidence:` PENDING.
-`Verify:` PENDING.
+`Evidence:` the `ags-platform` checkout `HEAD` equals `v1.1.0^{commit}`
+`f20a68539ae4211604f253b7a54caefa81920262`; the `contracts` checkout `HEAD`
+equals `v0.12.0^{commit}` `a03b5632828df8012c02a6117c3be438eca4264b`.
+`Verify:` `git -C ../ags-platform rev-parse v1.1.0^{commit} HEAD`,
+`git -C ../contracts rev-parse v0.12.0^{commit} HEAD`.
+
+`make gates` → exit 0. Log: `/tmp/opencode/ops002-gates.log`.
+
+- Node tests 24/24 pass (`fail 0`); `model.test.mjs` → 50 `ok`,
+  `model: all green`.
+- `app-contract.test.mjs` → 15/15 pass, including the platform
+  `checkAppRepo` template gate, the contracts v0.12.0 manifest-schema check
+  and the v1.1.0/v0.12.0 pin gate.
+- Drift → 37 `ok`, `all checks passed` against contracts v0.12.0.
+- Bundle → `build/ags-wallpaper-selector.js`, 1,080,860 bytes.
+- Typecheck → 0 errors in the selector tree (28 tolerated
+  `/usr/share/ags/js` errors, 0 `ags-platform` errors).
 
 ### Deviations
 
-PENDING.
+- Before the gate run, `make deps types platform-dev contracts-dev` was run
+  once in the fresh worktree so `typescript` and the machine GIR declarations
+  existed and `npm install --no-save` could not drop the `ags-platform` link
+  mid-run (the OPS-001 ordering deviation). The gate command itself then ran
+  cleanly; no Makefile change was made.
+- `app.tsx` and `lib/appearance.ts` protocol comments still name contracts
+  v0.8.0 / platform v1.0.0; they are app code, which this pin-only task must
+  not change.
+- No app behavior, `style.css`, layout tokens, `wallpaper.state`
+  subscription, handler/ack or lane policy changed. `package.json` keeps
+  `0.4.1` (the v0.5.x releases did not bump it; repo flow is the annotated
+  tag).
+- The release is the patch tag `v0.5.2` after the fast-forward merge to
+  `main`, pushed with `main`. This repo tags only; it publishes no GitHub
+  Release object. No deployment/apply was performed.
