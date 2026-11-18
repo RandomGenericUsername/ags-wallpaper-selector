@@ -769,6 +769,9 @@ export function WallpaperSelectorWindow(
         keys.set_propagation_phase(Gtk.PropagationPhase.CAPTURE);
         keys.connect("key-pressed", (_controller, keyval) => {
           if (keyval === Gdk.KEY_Escape) return escapePressed();
+          // The settings popover owns its own focus/Esc; do not navigate the
+          // overlay behind an open popover.
+          if (controlBar.gear.get_active()) return false;
           const typing = contactSheet.isSearchFocused();
           if (state.page === "grid") {
             if (typing) {

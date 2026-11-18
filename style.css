@@ -226,7 +226,8 @@ window#wallpaper-selector-window {
 }
 
 .ws-gear:hover,
-.ws-gear:active {
+.ws-gear:active,
+.ws-gear.is-active {
   color: @on_surface;
   background-color: alpha(@on_surface, 0.12);
 }
@@ -249,6 +250,17 @@ window#wallpaper-selector-window {
 .ws-set-text {
   font-size: 13px;
   font-weight: 700;
+}
+
+.ws-set:focus-visible {
+  outline: 2px solid @on_surface;
+  outline-offset: 3px;
+}
+
+.ws-look:focus-visible,
+.ws-grid-card:focus-visible {
+  outline: 2px solid @primary;
+  outline-offset: 3px;
 }
 
 .ws-set:disabled,

@@ -166,6 +166,10 @@ export class ControlBar {
     gear.set_popover(options.gearPopover);
     const gearIcon = new Gtk.Image({ icon_name: "emblem-system-symbolic", pixel_size: 16 });
     gear.set_child(gearIcon);
+    gear.connect("notify::active", () => {
+      if (gear.get_active()) gear.add_css_class("is-active");
+      else gear.remove_css_class("is-active");
+    });
     actions.append(gear);
     this.gear = gear;
 
