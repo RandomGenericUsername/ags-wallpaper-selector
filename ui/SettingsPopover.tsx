@@ -139,6 +139,10 @@ export class SettingsPopover {
     this.minus = new Gtk.Button({ label: "−" });
     this.minus.add_css_class("ws-stepper-button");
     this.minus.set_tooltip_text("Decrease top offset");
+    this.minus.update_property(
+      [Gtk.AccessibleProperty.LABEL],
+      ["Decrease top offset"],
+    );
     this.minus.connect("clicked", () => this.step(-1));
     this.offsetValue = new Gtk.Label({
       label: String(this.settings.control_bar.offsetPx),
@@ -148,6 +152,10 @@ export class SettingsPopover {
     this.plus = new Gtk.Button({ label: "+" });
     this.plus.add_css_class("ws-stepper-button");
     this.plus.set_tooltip_text("Increase top offset");
+    this.plus.update_property(
+      [Gtk.AccessibleProperty.LABEL],
+      ["Increase top offset"],
+    );
     this.plus.connect("clicked", () => this.step(1));
     stepper.append(this.minus);
     stepper.append(this.offsetValue);

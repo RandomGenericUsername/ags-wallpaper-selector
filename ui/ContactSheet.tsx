@@ -101,6 +101,7 @@ export class ContactSheet {
     const close = new Gtk.Button();
     close.add_css_class("ws-grid-close");
     close.set_tooltip_text("Close grid");
+    close.update_property([Gtk.AccessibleProperty.LABEL], ["Close grid"]);
     close.set_child(
       new Gtk.Image({ icon_name: "window-close-symbolic", pixel_size: 15 }),
     );

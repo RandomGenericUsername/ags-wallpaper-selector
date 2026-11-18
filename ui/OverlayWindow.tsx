@@ -687,11 +687,16 @@ export function WallpaperSelectorWindow(
       button.set_halign(Gtk.Align.START);
       button.set_margin_start(26);
       button.set_tooltip_text("Previous wallpaper");
+      button.update_property(
+        [Gtk.AccessibleProperty.LABEL],
+        ["Previous wallpaper"],
+      );
     } else {
       button.add_css_class("next");
       button.set_halign(Gtk.Align.END);
       button.set_margin_end(26);
       button.set_tooltip_text("Next wallpaper");
+      button.update_property([Gtk.AccessibleProperty.LABEL], ["Next wallpaper"]);
     }
     button.set_valign(Gtk.Align.CENTER);
     button.set_size_request(62, 62);

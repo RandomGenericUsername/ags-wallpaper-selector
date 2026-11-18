@@ -113,6 +113,30 @@ test("the bar offers no click-to-apply on the wallpaper stage", () => {
   assert.match(OVERLAY, /mainPage\.set_child\(stage\.widget\)/);
 });
 
+test("every icon-only button has an accessible name", () => {
+  const contact = readFileSync(new URL("../ui/ContactSheet.tsx", import.meta.url), "utf8");
+  const looks = readFileSync(new URL("../ui/LooksStrip.tsx", import.meta.url), "utf8");
+  const settings = readFileSync(
+    new URL("../ui/SettingsPopover.tsx", import.meta.url),
+    "utf8",
+  );
+  for (const [source, label] of [
+    [OVERLAY, "Previous wallpaper"],
+    [OVERLAY, "Next wallpaper"],
+    [BAR, "Placement settings"],
+    [contact, "Close grid"],
+    [settings, "Decrease top offset"],
+    [settings, "Increase top offset"],
+  ]) {
+    assert.ok(
+      source.includes(`["${label}"]`) &&
+        source.includes("Gtk.AccessibleProperty.LABEL"),
+      `missing accessible name: ${label}`,
+    );
+  }
+  assert.match(looks, /update_property\(\[Gtk\.AccessibleProperty\.LABEL\], \[choice\.name\]\)/);
+});
+
 test("the responsive rules are explicit (no CSS media queries in GTK)", () => {
   const bar = readFileSync(new URL("../ui/ControlBar.tsx", import.meta.url), "utf8");
   assert.match(bar, /setResponsive\(width: number\)/);

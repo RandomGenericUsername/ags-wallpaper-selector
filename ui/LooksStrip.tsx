@@ -75,6 +75,7 @@ export class LooksStrip {
       const chip = new Gtk.Button();
       chip.add_css_class("ws-look");
       chip.set_tooltip_text(choice.name);
+      chip.update_property([Gtk.AccessibleProperty.LABEL], [choice.name]);
       if (index === model.lookIndex) chip.add_css_class("selected");
       chip.set_sensitive(!model.disabled);
 

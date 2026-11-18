@@ -163,6 +163,7 @@ export class ControlBar {
     const gear = new Gtk.MenuButton();
     gear.add_css_class("ws-gear");
     gear.set_tooltip_text("Placement settings");
+    gear.update_property([Gtk.AccessibleProperty.LABEL], ["Placement settings"]);
     gear.set_popover(options.gearPopover);
     const gearIcon = new Gtk.Image({ icon_name: "emblem-system-symbolic", pixel_size: 16 });
     gear.set_child(gearIcon);
