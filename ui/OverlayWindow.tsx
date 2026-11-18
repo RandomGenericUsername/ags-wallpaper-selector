@@ -635,6 +635,9 @@ export function WallpaperSelectorWindow(
       }
     }
     render(false);
+    if (model !== null && model.wallpapers.length > 0) {
+      preloadNeighbours(state.focus.index);
+    }
   }
 
   function onWallpaperEvent(payload: Record<string, unknown>): void {

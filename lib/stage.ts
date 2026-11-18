@@ -97,11 +97,13 @@ export class StageView {
       this.present(target, animate);
       return;
     }
-    // Fast placeholder: the grid's 208 px thumb is already decoded in the
-    // common warm-cache case. If even that misses, decode it synchronously
-    // (~tens of ms) so the first open never shows the previous wallpaper;
-    // the stage-size decode still lands on an idle tick.
+    // Fast placeholder: a preloaded half-resolution neighbour is the best
+    // immediate fit; the grid's 208 px thumb is the warm-cache fallback. If
+    // even that misses, decode it synchronously (~tens of ms) so the first
+    // open never shows the previous wallpaper; the stage-size decode still
+    // lands on an idle tick.
     const quick =
+      cachedTexture(path, preloadDecodeDim(this.dim)) ??
       cachedTexture(path, PREVIEW_THUMB_DIM) ??
       generateThumb(path, PREVIEW_THUMB_DIM);
     if (quick !== null) target.set_paintable(quick);
