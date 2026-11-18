@@ -458,14 +458,14 @@ window#wallpaper-selector-window {
   color: alpha(@on_surface, 0.4);
 }
 
-.ws-search {
+.ws-grid-search {
   padding: 0 12px;
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 999px;
   background-color: alpha(@on_surface, 0.06);
 }
 
-.ws-search entry {
+.ws-grid-search entry {
   min-height: 0;
   padding: 0;
   border: none;

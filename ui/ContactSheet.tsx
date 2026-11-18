@@ -84,7 +84,7 @@ export class ContactSheet {
     const tools = new Gtk.Box({ orientation: Gtk.Orientation.HORIZONTAL, spacing: 10 });
     tools.add_css_class("ws-grid-tools");
     this.searchRow = new Gtk.Box({ orientation: Gtk.Orientation.HORIZONTAL, spacing: 8 });
-    this.searchRow.add_css_class("ws-search");
+    this.searchRow.add_css_class("ws-grid-search");
     this.searchRow.set_size_request(300, 36);
     this.searchRow.append(options.searchIcon);
     this.search = new Gtk.SearchEntry();
