@@ -57,8 +57,9 @@ app.start({
     // One apply for palette + skin + mode. Missing artifacts are a no-op and
     // an identical generation is coalesced, so this never double-installs.
     appearance.apply();
-    // Single centered window on the primary monitor (settings-style tool,
-    // not per-monitor chrome — same pattern as the ICME editor window).
+    // One full-monitor layer-shell overlay on the primary monitor. The
+    // provisioned launcher toggles `wallpaper-selector-window`; placement is
+    // app-owned settings, not a per-monitor list.
     const monitor = app.get_monitors()[0];
     if (monitor) addWindow(WallpaperSelectorWindow(monitor, appearance));
   },

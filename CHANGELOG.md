@@ -1,5 +1,29 @@
 # Changelog
 
+## v0.6.0 — 2026-11-18
+
+- Replace the centered 960×640 selector with the REQ-005 full-monitor overlay:
+  the candidate wallpaper is the surface, and the only chrome is two 62 px side
+  arrows plus one control bar (info / looks / actions).
+- Browse (`←`/`→`, looks, grid) never writes. `Set`/`Enter` is the only
+  commit, mapped to the three real `wallpaper.state` steps; the overlay holds
+  ~1.2 s after `done`, a failure keeps the preview, and `Esc` cancels without a
+  write.
+- Add app-owned placement settings at
+  `$XDG_CONFIG_HOME/wallpaper-selector/config.json` (bottom/top, desktop bar
+  shown/covered, top offset) with the capture-tool grammar: save-on-change,
+  post-merge per-key degradation, no Save button.
+- Add the pure state machine, placement math, settings merge/validate,
+  monitor-reserved parser and palette-hint quantizer, plus the GLib settings
+  adapter and AstalHyprland/hyprctl reserved-zone adapter.
+- Add the contact sheet (`G`/`/`, search, 208 px async pump), the looks strip
+  (Original + variants, live dot app-owned) and metadata (dimensions · size).
+- Keep the frozen identity: window `wallpaper-selector-window`, launcher
+  `wallpaper-selector-ui`, `createAppearance({ configDir: "ags-wallpaper-selector" })`
+  and the generation-bound `appearance-refresh` handler.
+- `style.css` is rewritten around the overlay classes; the skin plane remains
+  paint-only (layout/components are app-owned).
+
 ## v0.5.2 — 2026-11-12
 
 - Bump the local-only `ags-platform` pin from `v1.0.1` to `v1.1.0` and

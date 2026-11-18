@@ -110,7 +110,14 @@ export function scanSpine(dir?: string): RawWallpaper[] {
         console.error(`wallpaper-selector: unsupported image format, skipping ${path}`);
         continue;
       }
-      out.push({ name, path, hash: sha256File(path) });
+      out.push({
+        name,
+        path,
+        hash: sha256File(path),
+        width: typeof probe[1] === "number" ? probe[1] : null,
+        height: typeof probe[2] === "number" ? probe[2] : null,
+        bytes: statOne(path)?.size ?? null,
+      });
     } catch (error) {
       console.error(`wallpaper-selector: cannot hash ${path}: ${error}`);
     }
@@ -150,6 +157,32 @@ export function listEffectsEntries(root?: string): EffectsEntryStat[] {
     return out; // no effects cache yet — zero variants, not an error
   }
   return out.sort((a, b) => (a.name < b.name ? -1 : 1));
+}
+
+// ── Stage metadata ──────────────────────────────────────────────────────
+// The grid's stat path already knows bytes; pixel dimensions come from the
+// image header. Reading them for the focused wallpaper only keeps a warm open
+// cheap (a pixbuf header probe is ~50 ms/file on this host).
+
+export interface ImageInfo {
+  width: number;
+  height: number;
+  bytes: number | null;
+}
+
+/** Header-only dimensions + size for one image; null when unreadable. */
+export function readImageInfo(path: string): ImageInfo | null {
+  try {
+    const probe = GdkPixbuf.Pixbuf.get_file_info(path);
+    if (probe === null || probe[0] === null) return null;
+    const width = typeof probe[1] === "number" ? probe[1] : 0;
+    const height = typeof probe[2] === "number" ? probe[2] : 0;
+    if (width <= 0 || height <= 0) return null;
+    return { width, height, bytes: statOne(path)?.size ?? null };
+  } catch (error) {
+    console.error(`wallpaper-selector: cannot read image info ${path}: ${error}`);
+    return null;
+  }
 }
 
 /** Scan ONE effects entry dir (meta + recursive file walk). */
@@ -376,7 +409,7 @@ export function scanSpineFast(
   for (const f of stats) {
     const hit = mapping.get(f.path);
     if (hit !== undefined) {
-      wallpapers.push({ name: f.name, path: f.path, hash: hit });
+      wallpapers.push({ name: f.name, path: f.path, hash: hit, bytes: f.size });
       continue;
     }
     if (needsRealHash(f, mapping, knownSources, knownSizes)) {
@@ -384,7 +417,7 @@ export function scanSpineFast(
         const real = sha256File(f.path);
         hashedFallback++;
         if (knownHashes.has(real)) {
-          wallpapers.push({ name: f.name, path: f.path, hash: real });
+          wallpapers.push({ name: f.name, path: f.path, hash: real, bytes: f.size });
           continue;
         }
       } catch (error) {
@@ -392,7 +425,12 @@ export function scanSpineFast(
         continue;
       }
     }
-    wallpapers.push({ name: f.name, path: f.path, hash: unappliedPlaceholder(f.path) });
+    wallpapers.push({
+      name: f.name,
+      path: f.path,
+      hash: unappliedPlaceholder(f.path),
+      bytes: f.size,
+    });
   }
   return { wallpapers, hashedFallback };
 }
@@ -455,7 +493,13 @@ export function loadModelSmart(cachePath?: string): SelectorModel {
       }
     }
     if (intact) {
-      wallpapers = prev.spine.map((c) => ({ name: c.name, path: c.path, hash: c.hash }));
+      const bytesByPath = new Map(spineStats.map((f) => [f.path, f.size]));
+      wallpapers = prev.spine.map((c) => ({
+        name: c.name,
+        path: c.path,
+        hash: c.hash,
+        bytes: bytesByPath.get(c.path) ?? null,
+      }));
       spineCache = prev.spine;
       // A cached `unapplied:` placeholder pins forever under this fast path:
       // applying a wallpaper creates runtime metas WITHOUT touching spine
@@ -466,7 +510,12 @@ export function loadModelSmart(cachePath?: string): SelectorModel {
         const mapping = mapSpineHashes(spineStats, scanWallpaperMetas());
         const fixed = resolvePlaceholders(spineCache, mapping);
         spineCache = fixed;
-        wallpapers = fixed.map((c) => ({ name: c.name, path: c.path, hash: c.hash }));
+        wallpapers = fixed.map((c) => ({
+          name: c.name,
+          path: c.path,
+          hash: c.hash,
+          bytes: bytesByPath.get(c.path) ?? null,
+        }));
       }
     } else {
       const freshMetas = scanWallpaperMetas();
@@ -489,7 +538,7 @@ export function loadModelSmart(cachePath?: string): SelectorModel {
           // mapping below instead of reusing the stale placeholder.
           !old.hash.startsWith(UNAPPLIED_PREFIX)
         ) {
-          wallpapers.push({ name: old.name, path: old.path, hash: old.hash });
+          wallpapers.push({ name: old.name, path: old.path, hash: old.hash, bytes: f.size });
           spineCache.push(old);
           continue;
         }
@@ -506,7 +555,7 @@ export function loadModelSmart(cachePath?: string): SelectorModel {
           }
         }
         if (hash === null) hash = unappliedPlaceholder(f.path);
-        wallpapers.push({ name: f.name, path: f.path, hash });
+        wallpapers.push({ name: f.name, path: f.path, hash, bytes: f.size });
         spineCache.push({ name: f.name, path: f.path, hash, mtime: f.mtime, size: f.size });
       }
     }

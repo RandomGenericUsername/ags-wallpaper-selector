@@ -24,7 +24,7 @@ import { existsSync, readFileSync } from "node:fs";
 
 const APP = readFileSync(new URL("../app.tsx", import.meta.url), "utf8");
 const WINDOW = readFileSync(
-  new URL("../ui/WallpaperSelectorWindow.tsx", import.meta.url),
+  new URL("../ui/OverlayWindow.tsx", import.meta.url),
   "utf8",
 );
 
@@ -171,19 +171,10 @@ test("no new request command is added and wallpaper.state stays progress-only", 
   assert.doesNotMatch(WINDOW, /theme\.apply|skin\.apply|appearance\.apply/);
 });
 
-test("the app reads its namespaced layout tokens with fallbacks", () => {
-  assert.match(
-    CLEAN_WINDOW,
-    /appearance\.value\(\s*"layout\.ags-wallpaper-selector\.root-width",\s*960,?\s*\)/s,
-  );
-  assert.match(
-    CLEAN_WINDOW,
-    /appearance\.value\(\s*"layout\.ags-wallpaper-selector\.root-height",\s*640,?\s*\)/s,
-  );
-  assert.match(
-    CLEAN_WINDOW,
-    /root\.set_size_request\(rootWidth\(\),\s*rootHeight\(\)\)/,
-  );
+test("the overlay owns layout metrics; no layout token is expanded", () => {
+  assert.doesNotMatch(CLEAN_WINDOW, /layout\.ags-wallpaper-selector\./);
+  assert.doesNotMatch(CLEAN_WINDOW, /appearance\.value\(/);
+  assert.match(CLEAN_WINDOW, /Math\.min\(1160, monitorWidth - 56\)/);
   assert.match(CLEAN, /WallpaperSelectorWindow\(monitor,\s*appearance\)/);
 });
 
@@ -191,8 +182,8 @@ test("style.css remains the bundled glass fallback", () => {
   assert.ok(existsSync(new URL("../style.css", import.meta.url)));
   assert.match(CLEAN, /import\s+style\s+from\s+"\.\/style\.css"/);
   assert.match(CLEAN, /css:\s*style/);
-  assert.match(
-    readFileSync(new URL("../style.css", import.meta.url), "utf8"),
-    /\.ws-root\s*\{[^}]*min-width:\s*920px[^}]*min-height:\s*600px/s,
-  );
+  const css = readFileSync(new URL("../style.css", import.meta.url), "utf8");
+  assert.match(css, /window#wallpaper-selector-window/);
+  assert.match(css, /\.ws-control-bar\s*\{/);
+  assert.match(css, /\.ws-stage,\s*\n\.ws-stage-picture\s*\{/);
 });

@@ -174,12 +174,27 @@ test("the manifest is schema-valid and carries the selector identity", () => {
   assert.deepEqual(parsed.manifest, IDENTITY);
 });
 
-test("the manifest agrees with app.tsx and the selector window", () => {
+test("the manifest agrees with app.tsx and the selector overlay", () => {
   const app = readText("app.tsx");
-  const window = readText("ui", "WallpaperSelectorWindow.tsx");
+  const window = readText("ui", "OverlayWindow.tsx");
   assert.match(app, /instanceName:\s*"wallpaper-selector"/);
   assert.match(window, /const WINDOW_NAME = "wallpaper-selector-window"/);
   assert.match(readText("style.css"), /window#wallpaper-selector-window/);
+  assert.match(readText("ui", "WallpaperSelectorWindow.tsx"), /from "\.\/OverlayWindow"/);
+});
+
+test("the overlay is a layer-shell surface, never surface.window", () => {
+  const window = readText("ui", "OverlayWindow.tsx");
+  assert.match(window, /layer=\{Astal\.Layer\.OVERLAY\}/);
+  assert.match(window, /exclusivity=\{Astal\.Exclusivity\.IGNORE\}/);
+  assert.match(window, /keymode=\{Astal\.Keymode\.ON_DEMAND\}/);
+  assert.match(
+    window,
+    /Astal\.WindowAnchor\.TOP \|\s*Astal\.WindowAnchor\.RIGHT \|\s*Astal\.WindowAnchor\.BOTTOM \|\s*Astal\.WindowAnchor\.LEFT/,
+  );
+  // The layer-shell app owns placement; it never asks the skin for a
+  // decorated toplevel window role.
+  assert.doesNotMatch(window, /surface\.window/);
 });
 
 test("the launcher and keybind description are documented for consumers", () => {
@@ -199,7 +214,9 @@ test("no app-local platform copy and no sibling-app import survives", () => {
   for (const retired of ["theme.ts", "event-bus.ts", "event-bus-core.ts", "icon-registry.ts", "palette-refresh.ts"]) {
     assert.equal(existsSync(join(ROOT, "lib", retired)), false, `lib/${retired} must not exist`);
   }
-  const sources = walk().filter((file) => /^(app\.tsx|lib\/|ui\/)/.test(file));
+  const sources = walk().filter((file) =>
+    /^(app\.tsx|lib\/|ui\/|domain\/|ports\/|adapters\/)/.test(file),
+  );
   for (const file of sources) {
     const text = readText(file);
     assert.doesNotMatch(text, /from\s+"\.\.?\/(?:bar|notifications|capture-tool|hypr-pano|icme|btop-theme-studio)\//, file);
@@ -308,46 +325,43 @@ test("the app-owned refresh rebuilds only the search icon", () => {
   assert.doesNotMatch(body, /reapplyTheme|theme\.apply|skin\.apply/);
 });
 
-test("the search-icon refresh preserves the drawer", () => {
-  const window = readText("ui", "WallpaperSelectorWindow.tsx");
-  const refresh = functionBody(window, "function refreshSelectorChrome");
-  assert.match(refresh, /searchRow\.remove\(old\)/);
-  assert.match(refresh, /searchRow\.prepend\(searchUiIcon\(\)\)/);
+test("the search-icon refresh preserves the overlay and grid state", () => {
+  const window = readText("ui", "OverlayWindow.tsx");
+  const refresh = functionBody(window, "refreshChrome = () =>");
+  assert.match(refresh, /contactSheet\.replaceSearchIcon\(searchUiIcon\(\)\)/);
   for (const forbidden of [
     "rescan(",
-    "renderGrid(",
-    "drill(",
-    "goBack(",
-    "setModel(",
-    "setQuery(",
-    "setSelected(",
-    "search.set_text",
+    "render(",
+    "openGrid(",
+    "closeGrid(",
     "hideWindow(",
     ".visible =",
-    "setStatus(",
+    "stage.show(",
   ]) {
     assert.equal(
       refresh.includes(forbidden),
       false,
-      `appearance refresh must not touch drawer state: found ${forbidden}`,
+      `appearance refresh must not touch overlay state: found ${forbidden}`,
     );
   }
 });
 
-test("the window exposes only the chrome refresher to app.tsx", () => {
-  const window = readText("ui", "WallpaperSelectorWindow.tsx");
+test("the wrapper exposes only the chrome refresher to app.tsx", () => {
+  const window = readText("ui", "OverlayWindow.tsx");
+  const wrapper = readText("ui", "WallpaperSelectorWindow.tsx");
   const body = functionBody(window, "export function refreshWallpaperSelectorChrome");
   assert.match(body, /refreshChrome\?\.\(\)/);
-  assert.doesNotMatch(body, /renderGrid|rescan|setSelected|setQuery/);
+  assert.doesNotMatch(body, /rescan|render\(|hideWindow|stage\.show/);
   assert.match(
     window,
-    /refreshChrome = refreshSelectorChrome;/,
-    "the window registers the chrome refresher",
+    /refreshChrome = \(\) =>/,
+    "the overlay registers the chrome refresher",
   );
+  assert.match(wrapper, /refreshWallpaperSelectorChrome/);
 });
 
 test("the selector consumes the one platform event client, icon provider and Appearance", () => {
-  const window = readText("ui", "WallpaperSelectorWindow.tsx");
+  const window = readText("ui", "OverlayWindow.tsx");
   assert.match(window, /from\s+"ags-platform\/adapters\/event-bus"/);
   assert.match(window, /from\s+"ags-platform\/adapters\/icon"/);
   assert.match(window, /WALLPAPER_STATE_TOPIC = "wallpaper\.state"/);

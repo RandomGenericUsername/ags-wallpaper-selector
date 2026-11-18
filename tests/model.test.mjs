@@ -4,6 +4,9 @@
 import {
   buildModel,
   filterWallpapers,
+  formatBytes,
+  formatDimensions,
+  formatMeta,
   isImageFile,
   mapSpineHashes,
   needsRealHash,
@@ -251,6 +254,48 @@ const CURRENT_VAR = {
 check("image exts", ["a.png", "b.JPG", "c.webp", "d.jpeg", "e.gif"].every(isImageFile), true);
 check("non-image exts", ["a.txt", "a", "a.svg"].some(isImageFile), false);
 check("stem", [stemOf("blur-brightness80.png"), stemOf("noext")], ["blur-brightness80", "noext"]);
+
+// metadata for the control bar (REQ-005 §8.4)
+{
+  const m = buildModel(
+    [
+      {
+        name: "dragon.png",
+        path: "/s/dragon.png",
+        hash: "d".repeat(64),
+        width: 3840,
+        height: 2160,
+        bytes: 2.4 * 1024 * 1024,
+      },
+      { name: "unknown.png", path: "/s/unknown.png", hash: "u".repeat(64) },
+    ],
+    [],
+    null,
+  );
+  const dragon = m.wallpapers.find((w) => w.name === "dragon.png");
+  check("metadata carried", [dragon.width, dragon.height, Math.round(dragon.bytes)], [
+    3840,
+    2160,
+    Math.round(2.4 * 1024 * 1024),
+  ]);
+  const unknown = m.wallpapers.find((w) => w.name === "unknown.png");
+  check("missing metadata is null, not zero", [unknown.width, unknown.height, unknown.bytes], [
+    null,
+    null,
+    null,
+  ]);
+  check("dimensions format", formatDimensions(3840, 2160), "3840 × 2160");
+  check("missing dimensions", formatDimensions(null, 2160), null);
+  check("zero dimensions", formatDimensions(0, 2160), null);
+  check("bytes MB", formatBytes(2.4 * 1024 * 1024), "2.4 MB");
+  check("bytes KB whole", formatBytes(2048), "2.0 KB");
+  check("bytes under one KB", formatBytes(512), "512 B");
+  check("missing bytes", formatBytes(null), null);
+  check("negative bytes", formatBytes(-1), null);
+  check("full meta", formatMeta(3840, 2160, 2.4 * 1024 * 1024), "3840 × 2160 · 2.4 MB");
+  check("partial meta", formatMeta(null, null, 2.4 * 1024 * 1024), "2.4 MB");
+  check("empty meta", formatMeta(null, null, null), "");
+}
 
 if (failures > 0) {
   console.error(`${failures} failure(s)`);

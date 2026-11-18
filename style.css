@@ -1,221 +1,565 @@
-/* Wallpaper selector — rofi-style centered dialog in hypr-pano dress.
+/* Wallpaper selector — full-monitor overlay (REQ-005).
  *
- * Every color is a semantic palette.v1 role projected by the platform
- * Appearance provider (applied by app.tsx after this sheet): a palette swap
- * restyles the dialog with zero code changes. The runtime's
- * `appearance-refresh` request installs the committed generation and the
- * selector rebuilds its search icon in place; the open drawer is preserved and
- * the process is never restarted (AD-27). */
+ * The app owns layout, components and content; the skin owns paint and may
+ * override the simple surface selectors below at USER priority. Every colour
+ * here is a palette.v1 role (or the one semantic live green the app owns);
+ * literal rgba is used only for glass tints and hairlines.
+ *
+ * GTK 4.24 has no CSS transitions — motion is widget-level (Gtk.Stack
+ * CROSSFADE, Gtk.Revealer, Gtk.ProgressBar). */
 
 window#wallpaper-selector-window {
   background-color: transparent;
   color: @on_surface;
 }
 
-.ws-root {
-  min-width: 920px;
-  min-height: 600px;
+.ws-root-stack,
+.ws-main {
+  background-color: transparent;
 }
 
-.ws-panel {
-  background-color: alpha(@surface, 0.94);
-  border: 2px solid @primary;
-  border-radius: 16px;
-  padding: 14px 16px 12px;
+/* ── the wallpaper is the surface ─────────────────────────────────────── */
+
+.ws-stage,
+.ws-stage-picture {
+  background-color: #000;
 }
 
-/* Unified field: a SOLID surface one step above the panel (rofi's inputbar),
- * not a translucent hole. The search bar now matches rofi/hypr-pano exactly
- * (gui-unification spec §4 surface-search). */
-.ws-search {
-  background-color: @surface_container;
-  color: @on_surface;
-  border: none;
-  border-radius: 8px;
-  padding: 4px 8px;
-  min-height: 26px;
+/* Edges only: the image stays the image, not a tinted scrim. */
+.ws-vignette {
+  background-image:
+    radial-gradient(75% 60% at 50% 42%, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.38)),
+    linear-gradient(to top, rgba(0, 0, 0, 0.42), rgba(0, 0, 0, 0) 24%);
 }
 
-.ws-search placeholder {
-  color: alpha(@on_surface, 0.55);
-}
+/* ── side arrows ──────────────────────────────────────────────────────── */
 
-.ws-ui-icon {
-  opacity: 0.9;
-}
-
-.ws-crumb {
-  background-color: alpha(@surface, 0.45);
-  border: 1px solid alpha(@on_surface, 0.12);
-  border-radius: 10px;
-  padding: 10px 14px;
-}
-
-.ws-crumb-thumb {
-  border-radius: 8px;
-}
-
-.ws-crumb-name {
-  font-size: 15px;
-  font-weight: 700;
-}
-
-.ws-crumb-sub {
-  font-size: 12px;
-  color: alpha(@on_surface, 0.65);
-}
-
-.ws-back {
-  border: 1px solid alpha(@on_surface, 0.25);
-  border-radius: 8px;
-  padding: 6px 14px;
-}
-
-.ws-back:hover {
-  border-color: @primary;
-}
-
-.ws-title {
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: alpha(@on_surface, 0.6);
-}
-
-.ws-scroll {
-  border-radius: 8px;
-}
-
-.ws-card {
-  background-color: alpha(@surface, 0.45);
-  border: 1px solid alpha(@on_surface, 0.12);
-  border-radius: 12px;
+.ws-nav {
+  min-width: 62px;
+  min-height: 62px;
   padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  background-color: rgba(9, 9, 13, 0.4);
+  color: rgba(255, 255, 255, 0.92);
+  opacity: 0.8;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
 }
 
-/* Rofi's selection language, adapted to a card: the point/hover target gets
- * the selection accent ring; the card that is currently live keeps the ring +
- * a soft tint (a solid fill would erase the thumbnail — spec §3.5). */
-.ws-card:hover {
-  border-color: @primary;
+.ws-nav:hover {
+  opacity: 1;
+  background-color: rgba(9, 9, 13, 0.62);
 }
 
-.ws-card.selected {
-  border: 2px solid @primary;
-  background-color: alpha(@primary_container, 0.12);
+.ws-nav:focus-visible {
+  outline: 2px solid @primary;
+  outline-offset: 3px;
 }
 
-.ws-thumb {
-  border-radius: 11px 11px 0 0;
+.ws-nav:disabled {
+  opacity: 0.22;
 }
 
-/* Async placeholder while the thumbnail streams in off the idle pump. */
-.ws-thumb-loading {
-  background-color: alpha(@on_surface, 0.07);
+/* ── the one control bar ──────────────────────────────────────────────── */
+
+.ws-bar-shell {
+  background-color: transparent;
 }
 
-.ws-card-name {
-  font-size: 12px;
-  margin: 6px 10px 0;
+.ws-control-bar {
+  min-width: 280px;
+  padding: 14px 18px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 20px;
+  background-color: alpha(@surface, 0.54);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.46);
 }
 
-.ws-card-sub {
-  font-size: 11px;
-  color: alpha(@on_surface, 0.6);
-  margin: 0 10px 8px;
+.ws-left {
+  min-width: 0;
 }
 
-.ws-live {
-  font-size: 10px;
+.ws-name {
+  min-width: 0;
+  font-size: 16px;
+  font-weight: 650;
+  color: @on_surface;
+}
+
+.ws-state-pill {
+  min-height: 20px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background-color: alpha(@on_surface, 0.08);
+  color: alpha(@on_surface, 0.7);
+}
+
+.ws-state-pill.live {
+  background-color: rgba(74, 222, 128, 0.14);
+  color: #c4f8d6;
+}
+
+.ws-state-pill.setting {
+  background-color: alpha(@on_surface, 0.1);
+  color: alpha(@on_surface, 0.88);
+}
+
+.ws-state-text {
+  font-size: 9.5px;
   font-weight: 700;
-  background-color: #2ecc71;
-  color: #06270f;
-  border-radius: 6px;
-  padding: 1px 7px;
-  margin: 6px 6px 0 0;
 }
 
-/* L1 hover toolbar: Apply floats in one compact pill rather than covering the
- * thumbnail on its own (mock §1). GTK buttons carry theme min-height/padding,
- * so it is reset explicitly — without min-height:0 the pill renders ~40px
- * tall instead of the mock's 28. */
-.ws-hoverbar {
-  background-color: alpha(@surface, 0.92);
-  border: 1px solid alpha(@on_surface, 0.12);
-  border-radius: 9px;
-  /* The bar owns the inner spacing so the single Apply child sits centred on
-   * all four sides; the margin is the one offset from the thumbnail edge. */
-  padding: 3px;
-  margin: 0 6px 6px 0;
-  min-height: 0;
+.ws-state-dot {
+  min-width: 6px;
+  min-height: 6px;
+  border-radius: 999px;
+  background-color: #4ade80;
 }
 
-/* Busy (wallpaper.state applying|visible): Apply controls are also made
- * insensitive in code; this dims them consistency-wide (mock §3). */
-.ws-busy .ws-variant-apply,
-.ws-busy .ws-quick {
-  opacity: 0.38;
+.ws-meta-row {
+  min-height: 16px;
 }
 
+.ws-meta {
+  font-size: 11.5px;
+  color: alpha(@on_surface, 0.62);
+}
 
-.ws-quick {
-  background-color: @primary_container;
-  color: @on_primary_container;
+.ws-meta.is-step {
+  color: @primary;
+  font-weight: 550;
+}
+
+.ws-meta.is-error {
+  color: @error;
   font-weight: 600;
-  border-radius: 7px;
-  padding: 4px 14px;
-  margin: 0;
-  min-height: 0;
-  font-size: 12px;
 }
 
-.ws-quick:hover {
-  background-color: @primary;
-  color: @on_primary;
+.ws-swatches {
+  min-height: 12px;
 }
 
-/* Flat variant tile (mock): bare thumbnail, name + pill Apply in one row
- * beneath. No card chrome. */
-.ws-variant {
-  background: transparent;
-  border: none;
+.ws-swatch {
+  min-width: 12px;
+  min-height: 12px;
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.22);
+}
+
+/* ── looks strip ──────────────────────────────────────────────────────── */
+
+.ws-looks-head {
+  min-height: 14px;
+}
+
+.ws-looks-word,
+.ws-looks-head label {
+  font-size: 10.5px;
+  font-weight: 650;
+  color: alpha(@on_surface, 0.48);
+}
+
+.ws-look-name {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: alpha(@on_surface, 0.88);
+}
+
+.ws-look {
+  min-width: 54px;
+  min-height: 34px;
   padding: 0;
-}
-
-.ws-variant .ws-thumb {
+  border: none;
   border-radius: 8px;
+  background-color: transparent;
+  opacity: 0.7;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
 }
 
-.ws-variant-name {
-  font-size: 12px;
-  color: alpha(@on_surface, 0.85);
-  margin-top: 6px;
+.ws-look:hover {
+  opacity: 0.95;
 }
 
-.ws-variant-apply {
-  font-size: 11px;
-  background-color: alpha(@on_surface, 0.14);
+.ws-look.selected {
+  opacity: 1;
+  box-shadow: inset 0 0 0 2px @primary, 0 5px 14px rgba(0, 0, 0, 0.32);
+}
+
+.ws-look:disabled {
+  opacity: 0.45;
+}
+
+.ws-look-live-dot {
+  min-width: 5px;
+  min-height: 5px;
+  margin: 4px 4px 0 0;
+  border-radius: 999px;
+  background-color: #4ade80;
+}
+
+.ws-looks-empty {
+  min-height: 34px;
+  font-size: 10.5px;
+  color: alpha(@on_surface, 0.42);
+}
+
+.ws-kbd {
+  font-size: 9.5px;
+  font-weight: 650;
+  color: alpha(@on_surface, 0.62);
+  background-color: alpha(@on_surface, 0.08);
+  border: 1px solid alpha(@on_surface, 0.12);
+  border-radius: 5px;
+  padding: 3px 5px;
+}
+
+/* ── actions ──────────────────────────────────────────────────────────── */
+
+.ws-gear {
+  min-width: 42px;
+  min-height: 42px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  background-color: alpha(@on_surface, 0.06);
+  color: alpha(@on_surface, 0.68);
+}
+
+.ws-gear:hover,
+.ws-gear:active {
   color: @on_surface;
-  border-radius: 12px;
-  padding: 2px 14px;
-  margin-top: 4px;
+  background-color: alpha(@on_surface, 0.12);
 }
 
-.ws-variant-apply:hover {
+.ws-gear:focus-visible {
+  outline: 2px solid @primary;
+  outline-offset: 2px;
+}
+
+.ws-set {
+  min-height: 42px;
+  padding: 0 18px;
+  border: none;
+  border-radius: 999px;
   background-color: @primary;
+  color: @on_primary;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.34);
+}
+
+.ws-set-text {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.ws-set:disabled,
+.ws-set.is-live {
+  background-color: alpha(@on_surface, 0.08);
+  color: alpha(@on_surface, 0.54);
+  box-shadow: none;
+}
+
+.ws-set.is-committing {
+  background-color: alpha(@primary, 0.86);
   color: @on_primary;
 }
 
-.ws-empty {
-  color: alpha(@on_surface, 0.6);
-  border: 1px dashed alpha(@on_surface, 0.25);
-  border-radius: 10px;
-  padding: 22px;
+.ws-set-progress,
+.ws-bar-progress {
+  min-height: 2px;
+  background-color: transparent;
 }
 
+.ws-set-progress trough,
+.ws-bar-progress trough {
+  background-color: transparent;
+  border: none;
+}
 
+.ws-set-progress progress {
+  background-color: alpha(@on_surface, 0.22);
+  border-radius: 999px;
+}
 
-.ws-status {
+.ws-bar-progress progress {
+  background-color: @primary;
+  border-radius: 0;
+}
+
+.ws-set progress {
+  border-radius: 999px;
+}
+
+.ws-hints {
+  font-size: 9.5px;
+  color: alpha(@on_surface, 0.4);
+}
+
+.ws-hints label {
+  font-size: 9.5px;
+  color: alpha(@on_surface, 0.4);
+}
+
+/* ── settings popover ─────────────────────────────────────────────────── */
+
+.ws-settings-popover {
+  padding: 0;
+  border: none;
+  background-color: transparent;
+  box-shadow: none;
+}
+
+.ws-settings-popover > contents {
+  padding: 0;
+  border: none;
+  background-color: transparent;
+  box-shadow: none;
+}
+
+.ws-settings {
+  min-width: 322px;
+  padding: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 16px;
+  background-color: alpha(@surface, 0.92);
+  box-shadow: 0 22px 60px rgba(0, 0, 0, 0.52);
+}
+
+.ws-settings-head {
+  margin-bottom: 10px;
+}
+
+.ws-settings-title {
+  font-size: 13px;
+  font-weight: 650;
+  color: @on_surface;
+}
+
+.ws-settings-sub {
+  font-size: 10px;
+  font-weight: 550;
+  color: alpha(@on_surface, 0.4);
+}
+
+.ws-settings-row {
+  padding: 9px 0;
+}
+
+.ws-settings-label {
+  font-size: 11.5px;
+  font-weight: 550;
+  color: alpha(@on_surface, 0.86);
+}
+
+.ws-settings-desc {
+  font-size: 9.5px;
+  color: alpha(@on_surface, 0.4);
+}
+
+.ws-settings-error {
+  font-size: 9.5px;
+  color: @error;
+}
+
+.ws-settings-foot {
+  margin-top: 10px;
+  padding-top: 9px;
+  border-top: 1px solid alpha(@on_surface, 0.07);
+  font-size: 9.5px;
+  color: alpha(@on_surface, 0.4);
+}
+
+.ws-seg {
+  padding: 2px;
+  border: 1px solid alpha(@on_surface, 0.1);
+  border-radius: 999px;
+  background-color: alpha(@on_surface, 0.06);
+}
+
+.ws-seg-button {
+  min-height: 26px;
+  padding: 0 12px;
+  border: none;
+  border-radius: 999px;
+  background-color: transparent;
+  color: alpha(@on_surface, 0.62);
+  font-size: 10.5px;
+  font-weight: 600;
+}
+
+.ws-seg-button:hover {
+  color: @on_surface;
+}
+
+.ws-seg-button.selected {
+  background-color: alpha(@on_surface, 0.15);
+  color: @on_surface;
+}
+
+.ws-stepper-button {
+  min-width: 26px;
+  min-height: 26px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  background-color: transparent;
+  color: alpha(@on_surface, 0.62);
+  font-size: 14px;
+}
+
+.ws-stepper-button:hover {
+  color: @on_surface;
+  background-color: alpha(@on_surface, 0.06);
+}
+
+.ws-stepper-value {
+  min-width: 34px;
+  font-size: 11px;
+  color: @on_surface;
+}
+
+/* ── contact sheet ────────────────────────────────────────────────────── */
+
+.ws-grid {
+  padding: 32px 60px 28px;
+  background-color: rgba(6, 6, 9, 0.86);
+}
+
+.ws-grid-head {
+  padding-bottom: 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.ws-grid-title {
+  font-size: 21px;
+  font-weight: 650;
+  color: @on_surface;
+}
+
+.ws-grid-count {
+  font-size: 14px;
+  font-weight: 550;
+  color: alpha(@on_surface, 0.4);
+}
+
+.ws-grid-sub {
+  font-size: 11.5px;
+  color: alpha(@on_surface, 0.4);
+}
+
+.ws-search {
+  padding: 0 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  background-color: alpha(@on_surface, 0.06);
+}
+
+.ws-search entry {
+  min-height: 0;
+  padding: 0;
+  border: none;
+  background-color: transparent;
+  box-shadow: none;
+  color: @on_surface;
+  font-size: 12.5px;
+}
+
+.ws-search-icon {
+  color: alpha(@on_surface, 0.4);
+}
+
+.ws-grid-close {
+  min-width: 34px;
+  min-height: 34px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  background-color: transparent;
+  color: alpha(@on_surface, 0.62);
+}
+
+.ws-grid-close:hover {
+  color: @on_surface;
+  background-color: alpha(@on_surface, 0.05);
+}
+
+.ws-grid-scroll {
+  border: none;
+  background-color: transparent;
+}
+
+.ws-grid-flow {
+  padding: 20px 4px 8px;
+}
+
+.ws-grid-card {
+  padding: 0;
+  border: none;
+  background-color: transparent;
+  color: @on_surface;
+}
+
+.ws-grid-art {
+  border-radius: 13px;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+.ws-grid-card:hover .ws-grid-art {
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18),
+    0 12px 28px rgba(0, 0, 0, 0.32);
+}
+
+.ws-grid-card.focused .ws-grid-art {
+  box-shadow: inset 0 0 0 2px @primary;
+}
+
+.ws-grid-live {
+  min-height: 21px;
+  margin: 9px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background-color: rgba(8, 8, 10, 0.55);
+  color: @on_surface;
+  font-size: 9.5px;
+  font-weight: 700;
+}
+
+.ws-grid-live-dot {
+  min-width: 6px;
+  min-height: 6px;
+  border-radius: 999px;
+  background-color: #4ade80;
+}
+
+.ws-grid-name {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: @on_surface;
+}
+
+.ws-grid-meta {
+  font-size: 10.5px;
+  color: alpha(@on_surface, 0.4);
+}
+
+.ws-grid-empty {
+  padding: 32px;
   font-size: 12px;
-  color: alpha(@on_surface, 0.6);
+  color: alpha(@on_surface, 0.62);
+}
+
+/* ── toast ────────────────────────────────────────────────────────────── */
+
+.ws-toast-revealer {
+  background-color: transparent;
+}
+
+.ws-toast {
+  padding: 10px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  background-color: alpha(@surface, 0.92);
+  color: @on_surface;
+  font-size: 12px;
+  font-weight: 600;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.46);
 }

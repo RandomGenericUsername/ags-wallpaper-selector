@@ -21,23 +21,26 @@ ags list`, and requires `manifest.configDir == the deployed link basename`.
 
 ## Design contract
 
-The next design is the full-monitor desktop overlay specified in
+The selector is the full-monitor desktop overlay specified in
 [tickets/REQ-005-overlay-redesign/ticket.md](tickets/REQ-005-overlay-redesign/ticket.md);
 open [tickets/REQ-005-overlay-redesign/mock.html](tickets/REQ-005-overlay-redesign/mock.html)
-in a browser (no build step). The centered dialog described below is the live
-v0.4.x behavior, not the target.
+in a browser (no build step).
 
 ## What it does
 
-The selector is a centered, on-demand dialog:
+The selector is a layer-shell overlay on one monitor:
 
-- Level 1 — the install-spine wallpaper grid with search and hover Apply.
-- Level 2 — the per-wallpaper variant gallery (breadcrumb + Back) fed by the
-  runtime's effects cache.
-- Apply shells exactly `dotfiles-runtime wallpaper set <image>`; progress and
-  completion arrive on the `wallpaper.state` domain event. Applying collapses
-  the drawer immediately and the set continues in the background; failures
-  surface through the notifications app.
+- the candidate wallpaper fills the desktop; the only chrome is two side
+  arrows and one control bar (info / looks / actions);
+- `←`/`→` browse wallpapers, `↑`/`↓` step looks, `Set`/`Enter` commits,
+  `Esc` cancels, `G`/`/` opens the contact-sheet finder;
+- browsing never writes; the only write is
+  `dotfiles-runtime wallpaper set <image>`, on `Set`/`Enter`;
+- the overlay stays open through the three `wallpaper.state` steps, holds
+  ~1.2 s after `done`, then hides; a failure keeps the preview and never marks
+  the target live;
+- placement (bar bottom/top, desktop bar shown/covered, top offset) is
+  app-owned settings, saved immediately.
 
 ### Data paths
 
@@ -67,10 +70,10 @@ platform handler, wrapped with the standalone invariants:
 2. the app-owned work rebuilds the registry-backed search icon from the new
    palette.
 
-The drawer is **preserved**: no rescan, no query reset, no selection change, no
-visibility change, no status rewrite. `wallpaper.state` remains progress/busy
-status only and never applies the appearance. No additional request command is
-added.
+The overlay is **preserved**: no rescan, no focus change, no grid query reset,
+no visibility change, no commit-state rewrite. `wallpaper.state` remains
+progress status only and never applies the appearance. No additional request
+command is added.
 
 The handler is `createAppearanceRefreshHandler(appearance, work)` from
 `ags-platform/adapters/appearance`. It answers with exactly one JSON-encoded
@@ -80,14 +83,13 @@ accepted. A repeated generation re-verifies `current` but does not rerun the
 icon work; a moved `current` is deferred and a thrown apply is a retryable
 failure. A wallpaper change never restarts the process.
 
-## Layout tokens
+## Layout
 
-The app consumes its namespaced v2 metrics in TSX:
-`appearance.value("layout.ags-wallpaper-selector.root-width", 960)` and
-`appearance.value("layout.ags-wallpaper-selector.root-height", 640)` drive the
-root size request; the `960×640` fallbacks are the pre-v2 window defaults. The
-`920px` / `600px` glass minimum in `style.css` remains the bundled CSS
-fallback; templates never expand layout tokens into CSS.
+The overlay has no root-size token: it anchors to all four monitor edges and
+the app owns the metrics (bar `min(1160px, 100vw − 56px)`, 62 px arrows,
+responsive hiding below 1180/980/880 px). `style.css` is the bundled glass
+fallback; the generated appearance sheet wins at USER priority and only paints
+the app-declared surfaces.
 
 ## Local development
 
@@ -95,7 +97,7 @@ The program tuple is `ags-platform` v1.1.0 / `contracts` v0.12.0. Those tags are
 local-only in this run; the local gates use gitignored symlinks under `.dev/`.
 
 ```sh
-make test          # pure unit + model + Apply-collapse tests (Node only)
+make test          # pure unit + model + settings/placement/state/commit tests (Node only)
 make conformance   # manifest + handler + template gate
 make drift         # shared event client <-> contracts drift gate
 make typecheck     # LOCAL desktop stack: ags + GIR declarations
@@ -119,14 +121,27 @@ ags toggle wallpaper-selector-window -i wallpaper-selector
 ```text
 app.tsx                       AGS entry point (instance wallpaper-selector)
 app.manifest.json             identity tuple
-style.css                     ws-* classes (runtime palette tokens)
-lib/model.ts                  pure grouping/filtering (node-tested, no GJS)
+style.css                     overlay structure + glass fallback paint
+domain/settings.ts            placement vocabulary, merge, validate (pure)
+domain/placement.ts           bar/preview margin math (pure)
+domain/monitor-reserved.ts    hyprctl reserved-zone parser (pure)
+ports/                        settings-store + monitor-reserved seams
+adapters/                     GLib settings store + AstalHyprland/hyprctl
+lib/state.ts                  pure overlay state machine
+lib/model.ts                  pure grouping/filtering + metadata formatting
 lib/scan.ts                   spine + effects-cache + current.json scan (GJS)
+lib/stage.ts                  full-bleed stage, crossfade, preload (GJS)
+lib/palette-hint.ts           pure dominant-colour quantizer
 lib/thumbnails.ts             disk-cached GdkPixbuf thumbnails (GJS)
 lib/apply.ts                  execAsync engine entry point (GJS)
 lib/appearance.ts             pure app-owned search-icon refresh work
-ui/WallpaperSelectorWindow.tsx P5 window (imperative GTK + createEffect)
-tests/                        unit, model, Apply-collapse, drift, conformance
+ui/OverlayWindow.tsx          layer-shell overlay + state wiring
+ui/ControlBar.tsx             info / looks / actions
+ui/LooksStrip.tsx             Original + variant chips
+ui/ContactSheet.tsx           contact sheet + search
+ui/SettingsPopover.tsx        placement rows (save-on-change)
+ui/WallpaperSelectorWindow.tsx thin re-export used by app.tsx
+tests/                        unit, model, settings/placement/state, commit, layout
 tickets/                      LIFECYCLE, INDEX, _template, this repo's tickets
 scripts/worktree-guard.sh
 templates/ags-app/            frozen copyable template for the next app repo

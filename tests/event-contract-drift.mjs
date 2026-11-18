@@ -230,7 +230,7 @@ function fakeTransport(states) {
 // running a second selector -- would fight the live instance).
 
 const windowSource = readFileSync(
-  join(selectorDir, "ui", "WallpaperSelectorWindow.tsx"),
+  join(selectorDir, "ui", "OverlayWindow.tsx"),
   "utf-8",
 );
 const appSource = readFileSync(join(selectorDir, "app.tsx"), "utf-8");

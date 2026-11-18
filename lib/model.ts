@@ -6,6 +6,11 @@ export interface RawWallpaper {
   name: string;
   path: string;
   hash: string;
+  /** Pixel dimensions when a cheap header probe supplied them. */
+  width?: number | null;
+  height?: number | null;
+  /** Source file size in bytes (the stat path always knows this). */
+  bytes?: number | null;
 }
 
 export interface RawVariant {
@@ -30,6 +35,10 @@ export interface WallpaperEntry {
   hash: string;
   variantCount: number;
   live: boolean;
+  /** Metadata for the control bar; null when it has not been read yet. */
+  width: number | null;
+  height: number | null;
+  bytes: number | null;
 }
 
 export interface VariantEntry {
@@ -186,6 +195,9 @@ export function buildModel(
       hash: w.hash,
       variantCount: variants.get(w.hash)?.length ?? 0,
       live: w.hash === liveHash,
+      width: w.width ?? null,
+      height: w.height ?? null,
+      bytes: w.bytes ?? null,
     }))
     .sort((a, b) => a.name.localeCompare(b.name));
   // Pin the live wallpaper (or a live variant's parent) first in the grid;
@@ -239,4 +251,41 @@ export function filterWallpapers(
   const q = query.trim().toLowerCase();
   if (q === "") return wallpapers;
   return wallpapers.filter((w) => w.name.toLowerCase().includes(q));
+}
+
+/** `3840 × 2160`; null when either dimension is unknown. */
+export function formatDimensions(
+  width: number | null,
+  height: number | null,
+): string | null {
+  if (width === null || height === null) return null;
+  if (!Number.isFinite(width) || !Number.isFinite(height)) return null;
+  if (width <= 0 || height <= 0) return null;
+  return `${Math.trunc(width)} × ${Math.trunc(height)}`;
+}
+
+/** `2.4 MB` (binary units, one decimal below 10, whole above). */
+export function formatBytes(bytes: number | null): string | null {
+  if (bytes === null || !Number.isFinite(bytes) || bytes < 0) return null;
+  const units = ["B", "KB", "MB", "GB", "TB"];
+  let value = bytes;
+  let unit = 0;
+  while (value >= 1024 && unit < units.length - 1) {
+    value /= 1024;
+    unit += 1;
+  }
+  const digits = unit === 0 ? 0 : value < 10 ? 1 : 0;
+  return `${value.toFixed(digits)} ${units[unit]}`;
+}
+
+/** The control bar's meta line; unknown members are simply omitted. */
+export function formatMeta(
+  width: number | null,
+  height: number | null,
+  bytes: number | null,
+): string {
+  const parts = [formatDimensions(width, height), formatBytes(bytes)].filter(
+    (part): part is string => part !== null,
+  );
+  return parts.join(" · ");
 }
