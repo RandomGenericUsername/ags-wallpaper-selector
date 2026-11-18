@@ -43,6 +43,7 @@ export class ContactSheet {
   private readonly searchRow: Gtk.Box;
   private readonly count: Gtk.Label;
   private readonly flow: Gtk.FlowBox;
+  private readonly scroll: Gtk.ScrolledWindow;
   private readonly empty: Gtk.Label;
   private readonly options: ContactSheetOptions;
   private model: SelectorModel | null = null;
@@ -122,6 +123,7 @@ export class ContactSheet {
     this.flow.add_css_class("ws-grid-flow");
     this.flow.set_size_request(Math.max(280, Math.min(1320, options.width - 120)), -1);
     const scroll = new Gtk.ScrolledWindow({ hexpand: true, vexpand: true });
+    this.scroll = scroll;
     scroll.add_css_class("ws-grid-scroll");
     const holder = new Gtk.Box({ orientation: Gtk.Orientation.VERTICAL });
     holder.set_halign(Gtk.Align.CENTER);
@@ -204,9 +206,11 @@ export class ContactSheet {
           ? "No wallpapers in the install spine."
           : `No wallpapers match “${this.query.trim()}”.`,
       );
+      this.scroll.set_visible(false);
       this.empty.set_visible(true);
       return;
     }
+    this.scroll.set_visible(true);
     this.empty.set_visible(false);
     for (const wallpaper of list) {
       this.flow.append(this.card(wallpaper, generation));

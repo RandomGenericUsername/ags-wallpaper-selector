@@ -226,7 +226,6 @@ export function WallpaperSelectorWindow(
   const infoPending = new Set<string>();
   const hintPending = new Set<string>();
   let activePath = "";
-  let commitStartedAt = 0;
   let commitTimeout: number | null = null;
   let holdTimer: number | null = null;
   let toastTimer: number | null = null;
@@ -336,8 +335,10 @@ export function WallpaperSelectorWindow(
 
   function ensureInfo(entry: WallpaperEntry, path: string): string {
     const cached = infoCache.get(path);
-    if (cached !== undefined && cached !== null) {
-      return formatMeta(cached.width, cached.height, cached.bytes);
+    if (cached !== undefined) {
+      return cached === null
+        ? formatMeta(entry.width, entry.height, entry.bytes)
+        : formatMeta(cached.width, cached.height, cached.bytes);
     }
     if (entry.width !== null && entry.height !== null) {
       return formatMeta(entry.width, entry.height, entry.bytes);
@@ -379,8 +380,7 @@ export function WallpaperSelectorWindow(
     const entry = focusEntry();
     if (entry === null) return;
     const path = lookPathOf(model, entry, state.focus.look);
-    const model0 = controlBarModel(entry, path);
-    controlBar.update(model0);
+    controlBar.update(controlBarModel(entry, path));
   }
 
   function controlBarModel(entry: WallpaperEntry, path: string) {
@@ -530,17 +530,6 @@ export function WallpaperSelectorWindow(
     hideWindow();
   }
 
-  function clearTimers(): void {
-    if (commitTimeout !== null) {
-      GLib.source_remove(commitTimeout);
-      commitTimeout = null;
-    }
-    if (holdTimer !== null) {
-      GLib.source_remove(holdTimer);
-      holdTimer = null;
-    }
-  }
-
   function commit(): void {
     if (state.phase === "committing" || state.phase === "closed") return;
     const entry = focusEntry();
@@ -549,7 +538,6 @@ export function WallpaperSelectorWindow(
     state = beginCommit(state);
     render(false);
     controlBar.gear.set_active(false);
-    commitStartedAt = Date.now();
     if (commitTimeout !== null) GLib.source_remove(commitTimeout);
     commitTimeout = GLib.timeout_add(
       GLib.PRIORITY_DEFAULT,
@@ -569,9 +557,7 @@ export function WallpaperSelectorWindow(
         // stream still drives the visible steps. If it resolves while the
         // overlay is committing, reconcile as success (a missed final event
         // must not leave the overlay stuck).
-        if (state.phase === "committing" && Date.now() - commitStartedAt > 0) {
-          done(entry);
-        }
+        if (state.phase === "committing") done(entry);
       })
       .catch((error) => {
         if (state.phase === "committing") {
