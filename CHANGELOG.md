@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.6.6 — 2026-11-19
+
+- The selected look now carries a neutral 2 px ring with a dark separator
+  instead of a palette-accent ring: a dark accent on a dark thumbnail was
+  invisible, so the user could not tell which variant `Set` would apply.
+  Unselected chips dim to 42 %.
+
 ## v0.6.5 — 2026-11-19
 
 - Palette-hint swatches are fixed 12×12 circles; they no longer stretch into

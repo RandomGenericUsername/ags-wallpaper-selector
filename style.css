@@ -174,22 +174,23 @@ window#wallpaper-selector-window {
   border-radius: 8px;
   background-image: none;
   background-color: transparent;
-  opacity: 0.55;
+  opacity: 0.42;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
 }
 
 .ws-look:hover {
-  opacity: 0.82;
+  opacity: 0.78;
 }
 
-/* Selected look: a 2 px accent ring with a 2 px dark separator inside it, so a
- * light accent never disappears into a bright thumbnail. */
+/* Selected look: a neutral 2 px ring the palette cannot camouflage, with a
+ * dark separator inside it and a lifted shadow. Unselected chips are dimmed so
+ * the chosen variant is unambiguous at a glance. */
 .ws-look.selected {
   opacity: 1;
   box-shadow:
-    inset 0 0 0 2px @primary,
+    inset 0 0 0 2px rgba(255, 255, 255, 0.94),
     inset 0 0 0 4px rgba(0, 0, 0, 0.55),
-    0 5px 14px rgba(0, 0, 0, 0.32);
+    0 6px 16px rgba(0, 0, 0, 0.4);
 }
 
 .ws-look:disabled {
