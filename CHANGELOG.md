@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.6.8 — 2026-11-19
+
+- Make the Set button's label the main child of its overlay and the progress
+  fill the overlay. The button was sized to the ProgressBar's natural width, so
+  the pill only covered "Set" while "wallpaper ↵" spilled outside it. This also
+  restores the correct size of the live `Current wallpaper` pill.
+
 ## v0.6.7 — 2026-11-19
 
 - Border the accent ring with a check badge on the selected look: a dark

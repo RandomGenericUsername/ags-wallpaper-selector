@@ -192,12 +192,9 @@ export class ControlBar {
     this.setButton.add_css_class("ws-set");
     this.setButton.set_tooltip_text("Set this wallpaper");
     const setSurface = new Gtk.Overlay();
-    this.setProgress = new Gtk.ProgressBar();
-    this.setProgress.add_css_class("ws-set-progress");
-    this.setProgress.set_show_text(false);
-    this.setProgress.set_valign(Gtk.Align.FILL);
-    this.setProgress.set_halign(Gtk.Align.FILL);
-    setSurface.set_child(this.setProgress);
+    // The label is the MAIN child: it must size the pill. The progress fill is
+    // an overlay, otherwise the pill collapses to the ProgressBar's natural
+    // width and the label spills outside its own background.
     const setContent = new Gtk.Box({ orientation: Gtk.Orientation.HORIZONTAL, spacing: 9 });
     setContent.add_css_class("ws-set-content");
     this.setLabel = new Gtk.Label({ label: "Set wallpaper" });
@@ -205,7 +202,14 @@ export class ControlBar {
     this.setKeycap = keycap("↵");
     setContent.append(this.setLabel);
     setContent.append(this.setKeycap);
-    setSurface.add_overlay(setContent);
+    setSurface.set_child(setContent);
+    this.setProgress = new Gtk.ProgressBar();
+    this.setProgress.add_css_class("ws-set-progress");
+    this.setProgress.set_show_text(false);
+    this.setProgress.set_valign(Gtk.Align.FILL);
+    this.setProgress.set_halign(Gtk.Align.FILL);
+    this.setProgress.set_can_target(false);
+    setSurface.add_overlay(this.setProgress);
     this.setButton.set_child(setSurface);
     this.setButton.connect("clicked", () => options.onSet());
     actions.append(this.setButton);
