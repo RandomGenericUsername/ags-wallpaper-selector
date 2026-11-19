@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.6.3 — 2026-11-19
+
+- Give the Looks strip a fixed 354 px window (six chips) with external
+  scrolling: no viewport fill, no reserved scrollbar gutter, and the selected
+  chip still auto-scrolls into view. Supersedes the strip allocation in v0.6.2.
+
 ## v0.6.2 — 2026-11-19
 
 - Clamp the Looks strip to 360 px and scroll it horizontally: an unbounded

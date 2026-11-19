@@ -56,11 +56,12 @@ export class LooksStrip {
     // horizontally (overlay scrollbar, no reserved gutter).
     this.scroller = new Gtk.ScrolledWindow();
     this.scroller.add_css_class("ws-looks-scroll");
-    this.scroller.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.NEVER);
-    this.scroller.set_overlay_scrolling(true);
-    this.scroller.set_propagate_natural_width(true);
-    this.scroller.set_propagate_natural_height(true);
-    this.scroller.set_max_content_width(360);
+    // EXTERNAL: the strip scrolls by wheel/touchpad and by the selected-chip
+    // auto-scroll, but no scrollbar node is drawn or reserves height.
+    this.scroller.set_policy(Gtk.PolicyType.EXTERNAL, Gtk.PolicyType.NEVER);
+    this.scroller.set_propagate_natural_width(false);
+    this.scroller.set_propagate_natural_height(false);
+    this.scroller.set_size_request(354, 34);
     this.scroller.set_child(this.row);
 
     this.widget.append(this.scroller);

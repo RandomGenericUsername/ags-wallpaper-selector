@@ -205,11 +205,17 @@ window#wallpaper-selector-window {
 
 /* The strip clamps to 360 px so an unbounded variant list cannot stretch the
  * 1160 px control bar; the mock's five-look case still fits exactly. */
-.ws-looks-scroll {
+.ws-looks-scroll,
+.ws-looks-scroll viewport,
+.ws-looks-scroll undershoot,
+.ws-looks-scroll overshoot {
   min-height: 34px;
   padding: 0;
   border: none;
+  background: none;
   background-color: transparent;
+  background-image: none;
+  box-shadow: none;
 }
 
 .ws-looks-scroll scrollbar {
