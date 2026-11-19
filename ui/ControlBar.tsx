@@ -107,6 +107,7 @@ export class ControlBar {
     const left = new Gtk.Box({ orientation: Gtk.Orientation.VERTICAL, spacing: 4 });
     left.add_css_class("ws-left");
     left.set_hexpand(true);
+    left.set_valign(Gtk.Align.CENTER);
     const nameRow = new Gtk.Box({ orientation: Gtk.Orientation.HORIZONTAL, spacing: 10 });
     this.name = textLabel("ws-name");
     // The mock keeps the state pill beside the filename; the name does not
@@ -121,6 +122,9 @@ export class ControlBar {
     this.stateDot = new Gtk.Box();
     this.stateDot.add_css_class("ws-state-dot");
     this.stateDot.set_can_target(false);
+    this.stateDot.set_valign(Gtk.Align.CENTER);
+    this.stateDot.set_halign(Gtk.Align.CENTER);
+    this.stateDot.set_size_request(6, 6);
     this.stateText = textLabel("ws-state-text");
     this.statePill.append(this.stateDot);
     this.statePill.append(this.stateText);
@@ -141,6 +145,7 @@ export class ControlBar {
     this.middle = middle;
     middle.add_css_class("ws-middle");
     middle.set_halign(Gtk.Align.CENTER);
+    middle.set_valign(Gtk.Align.CENTER);
     const looksHead = new Gtk.Box({ orientation: Gtk.Orientation.HORIZONTAL, spacing: 7 });
     looksHead.add_css_class("ws-looks-head");
     const looksWord = new Gtk.Label({ label: "Looks" });
@@ -159,6 +164,7 @@ export class ControlBar {
     const right = new Gtk.Box({ orientation: Gtk.Orientation.VERTICAL, spacing: 5 });
     right.add_css_class("ws-right");
     right.set_halign(Gtk.Align.END);
+    right.set_valign(Gtk.Align.CENTER);
     const actions = new Gtk.Box({ orientation: Gtk.Orientation.HORIZONTAL, spacing: 8 });
     actions.add_css_class("ws-actions");
 

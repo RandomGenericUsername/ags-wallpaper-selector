@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.6.4 — 2026-11-19
+
+- The `Live` dot is a 6 px circle again (it was stretching into a vertical bar
+  because the box inherited fill alignment).
+- Vertically centre the three bar zones; the filename/state/meta block no
+  longer sits at the top of a taller bar.
+- Reset the GTK theme's `background-image` on the gear, Set, arrow and look
+  buttons so the theme's gradient no longer bleeds through the paint.
+- Do not focus the gear on open; the keyboard focus ring appears only after
+  real Tab/keyboard focus.
+
 ## v0.6.3 — 2026-11-19
 
 - Give the Looks strip a fixed 354 px window (six chips) with external

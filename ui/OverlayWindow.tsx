@@ -769,6 +769,9 @@ export function WallpaperSelectorWindow(
       $={(self) => {
         window = self;
         applyPlacement();
+        // Do not open with the first focusable control (the gear) wearing a
+        // keyboard focus ring; the ring belongs to real Tab/keyboard focus.
+        self.connect("map", () => self.set_focus(null));
 
         // Capture phase: arrows/Enter/Esc are seen before a focused button or
         // the grid search entry. Typing in the entry is left alone (only Enter
