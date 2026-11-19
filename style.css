@@ -197,6 +197,20 @@ window#wallpaper-selector-window {
   opacity: 0.45;
 }
 
+.ws-look-check {
+  min-width: 13px;
+  min-height: 13px;
+  margin: 3px;
+  padding: 1px 0 0 0;
+  border-radius: 999px;
+  background-image: none;
+  background-color: @primary;
+  color: @on_primary;
+  font-size: 9px;
+  font-weight: 800;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.4);
+}
+
 .ws-look-live-dot {
   min-width: 5px;
   min-height: 5px;
@@ -243,6 +257,10 @@ window#wallpaper-selector-window {
 
 /* ── actions ──────────────────────────────────────────────────────────── */
 
+/* Arc-Dark styles `menubutton.image-button` (0,1,1), which outranks a plain
+ * class selector; match that specificity so the skin's circle wins. */
+menubutton.ws-gear,
+menubutton.ws-gear.image-button,
 .ws-gear {
   min-width: 42px;
   min-height: 42px;
@@ -255,6 +273,23 @@ window#wallpaper-selector-window {
   box-shadow: none;
 }
 
+/* GtkMenuButton carries an inner button node that Arc-Dark paints as a
+ * rounded square; strip it so only the skin's circle is visible. */
+menubutton.ws-gear button,
+.ws-gear button {
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background-image: none;
+  background-color: transparent;
+  box-shadow: none;
+}
+
+menubutton.ws-gear:hover,
+menubutton.ws-gear:active,
+menubutton.ws-gear.is-active,
 .ws-gear:hover,
 .ws-gear:active,
 .ws-gear.is-active {
@@ -267,6 +302,7 @@ window#wallpaper-selector-window {
   outline-offset: 2px;
 }
 
+button.ws-set,
 .ws-set {
   min-height: 42px;
   padding: 0 18px;
@@ -291,6 +327,7 @@ window#wallpaper-selector-window {
   border-color: rgba(0, 0, 0, 0.18);
 }
 
+button.ws-set:focus-visible,
 .ws-set:focus-visible {
   outline: 2px solid @on_surface;
   outline-offset: 3px;
@@ -302,11 +339,15 @@ window#wallpaper-selector-window {
   outline-offset: 3px;
 }
 
+button.ws-set:disabled,
+button.ws-set.is-live,
 .ws-set:disabled,
 .ws-set.is-live {
+  background-image: none;
   background-color: alpha(@on_surface, 0.08);
   color: alpha(@on_surface, 0.54);
   box-shadow: none;
+  opacity: 1;
 }
 
 .ws-set.is-committing {

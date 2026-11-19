@@ -771,7 +771,16 @@ export function WallpaperSelectorWindow(
         applyPlacement();
         // Do not open with the first focusable control (the gear) wearing a
         // keyboard focus ring; the ring belongs to real Tab/keyboard focus.
-        self.connect("map", () => self.set_focus(null));
+        // GTK assigns the initial focus on map/activate, so clear it on idle.
+        const clearInitialFocus = () =>
+          GLib.timeout_add(GLib.PRIORITY_DEFAULT, 120, () => {
+            self.set_focus(null);
+            return false;
+          });
+        self.connect("map", clearInitialFocus);
+        self.connect("notify::is-active", () => {
+          if (self.is_active) clearInitialFocus();
+        });
 
         // Capture phase: arrows/Enter/Esc are seen before a focused button or
         // the grid search entry. Typing in the entry is left alone (only Enter

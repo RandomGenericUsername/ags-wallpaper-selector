@@ -173,6 +173,9 @@ export class ControlBar {
 
     const gear = new Gtk.MenuButton();
     gear.add_css_class("ws-gear");
+    gear.set_size_request(42, 42);
+    gear.set_halign(Gtk.Align.CENTER);
+    gear.set_valign(Gtk.Align.CENTER);
     gear.set_tooltip_text("Placement settings");
     gear.update_property([Gtk.AccessibleProperty.LABEL], ["Placement settings"]);
     gear.set_popover(options.gearPopover);

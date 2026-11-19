@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.6.7 — 2026-11-19
+
+- Border the accent ring with a check badge on the selected look: a dark
+  palette accent could not carry the selection, and a bright thumbnail could
+  outshine a dimmed chip. The badge is app-owned content at the chip's
+  bottom-right; the live dot stays top-right.
+- Make the gear a true 42 px circle: Arc-Dark paints the inner `button` node of
+  `GtkMenuButton` as a rounded square, so that node is reset to transparent and
+  the theme's `menubutton.image-button` specificity is matched.
+- Clear the initial focus after activation (120 ms) so the gear no longer opens
+  wearing a keyboard focus ring.
+- Match Arc's `button:disabled` specificity so the disabled `Current wallpaper`
+  pill no longer inherits the theme gradient.
+
 ## v0.6.6 — 2026-11-19
 
 - The selected look now carries a neutral 2 px ring with a dark separator

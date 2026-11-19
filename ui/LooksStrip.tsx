@@ -112,6 +112,16 @@ export class LooksStrip {
           return false;
         });
       }
+      if (index === model.lookIndex) {
+        // The palette accent can be dark, so the ring alone cannot carry the
+        // selection. A check badge makes the variant being set unambiguous.
+        const check = new Gtk.Label({ label: "✓" });
+        check.add_css_class("ws-look-check");
+        check.set_halign(Gtk.Align.END);
+        check.set_valign(Gtk.Align.END);
+        check.set_can_target(false);
+        overlay.add_overlay(check);
+      }
       if (index === model.liveLookIndex) {
         const dot = new Gtk.Box();
         dot.add_css_class("ws-look-live-dot");
