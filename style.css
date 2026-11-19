@@ -203,6 +203,20 @@ window#wallpaper-selector-window {
   color: alpha(@on_surface, 0.42);
 }
 
+/* The strip clamps to 360 px so an unbounded variant list cannot stretch the
+ * 1160 px control bar; the mock's five-look case still fits exactly. */
+.ws-looks-scroll {
+  min-height: 34px;
+  padding: 0;
+  border: none;
+  background-color: transparent;
+}
+
+.ws-looks-scroll scrollbar {
+  min-height: 0;
+  opacity: 0;
+}
+
 .ws-kbd {
   font-size: 9.5px;
   font-weight: 650;
@@ -250,6 +264,14 @@ window#wallpaper-selector-window {
 .ws-set-text {
   font-size: 13px;
   font-weight: 700;
+}
+
+/* The keycap sits on the accent fill, not on glass: inherit the on-accent ink
+ * (mock `.set kbd`), otherwise it is light-on-light and disappears. */
+.ws-set .ws-kbd {
+  color: @on_primary;
+  background-color: rgba(0, 0, 0, 0.14);
+  border-color: rgba(0, 0, 0, 0.18);
 }
 
 .ws-set:focus-visible {

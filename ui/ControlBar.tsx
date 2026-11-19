@@ -109,7 +109,9 @@ export class ControlBar {
     left.set_hexpand(true);
     const nameRow = new Gtk.Box({ orientation: Gtk.Orientation.HORIZONTAL, spacing: 10 });
     this.name = textLabel("ws-name");
-    this.name.set_hexpand(true);
+    // The mock keeps the state pill beside the filename; the name does not
+    // grow to eat the left zone. Long names ellipsize at a fixed cap.
+    this.name.set_max_width_chars(32);
     this.name.set_ellipsize(Pango.EllipsizeMode.END);
     nameRow.append(this.name);
 

@@ -30,6 +30,7 @@ export interface LooksStripModel {
 
 export class LooksStrip {
   readonly widget: Gtk.Box;
+  private readonly scroller: Gtk.ScrolledWindow;
   private readonly row: Gtk.Box;
   private readonly note: Gtk.Label;
   private generation = 0;
@@ -47,15 +48,28 @@ export class LooksStrip {
       xalign: 0,
     });
     this.note.add_css_class("ws-looks-empty");
-    this.note.set_visible(false);
+    this.note.set_valign(Gtk.Align.CENTER);
 
-    this.widget.append(this.row);
-    this.widget.append(this.note);
+    // The mock keeps the honest empty note in the same horizontal row as the
+    // Original chip. The strip also has to survive an unbounded variant list
+    // without stretching the 1160 px control bar: clamp it and scroll
+    // horizontally (overlay scrollbar, no reserved gutter).
+    this.scroller = new Gtk.ScrolledWindow();
+    this.scroller.add_css_class("ws-looks-scroll");
+    this.scroller.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.NEVER);
+    this.scroller.set_overlay_scrolling(true);
+    this.scroller.set_propagate_natural_width(true);
+    this.scroller.set_propagate_natural_height(true);
+    this.scroller.set_max_content_width(360);
+    this.scroller.set_child(this.row);
+
+    this.widget.append(this.scroller);
   }
 
   update(model: LooksStripModel): void {
     this.generation += 1;
     const generation = this.generation;
+    const selectedChips: Gtk.Widget[] = [];
     let child = this.row.get_first_child();
     while (child !== null) {
       const next = child.get_next_sibling();
@@ -76,7 +90,10 @@ export class LooksStrip {
       chip.add_css_class("ws-look");
       chip.set_tooltip_text(choice.name);
       chip.update_property([Gtk.AccessibleProperty.LABEL], [choice.name]);
-      if (index === model.lookIndex) chip.add_css_class("selected");
+      if (index === model.lookIndex) {
+        chip.add_css_class("selected");
+        selectedChips.push(chip);
+      }
       chip.set_sensitive(!model.disabled);
 
       const overlay = new Gtk.Overlay();
@@ -109,7 +126,25 @@ export class LooksStrip {
       this.row.append(chip);
     });
 
-    this.note.set_visible(model.variants.length === 0);
+    if (model.variants.length === 0) this.row.append(this.note);
+    if (selectedChips.length > 0) {
+      // Keep the keyboard-selected chip visible without a permanent gutter.
+      const chip = selectedChips[0];
+      GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
+        if (generation !== this.generation) return false;
+        const bounds = chip.compute_bounds(this.row);
+        if (!bounds[0]) return false;
+        const rect = bounds[1];
+        const adjustment = this.scroller.get_hadjustment();
+        const left = rect.get_x();
+        const right = left + rect.get_width();
+        if (left < adjustment.get_value()) adjustment.set_value(left);
+        else if (right > adjustment.get_value() + adjustment.get_page_size()) {
+          adjustment.set_value(right - adjustment.get_page_size());
+        }
+        return false;
+      });
+    }
     this.row.set_opacity(model.disabled ? 0.45 : 1);
     this.row.set_sensitive(!model.disabled);
   }

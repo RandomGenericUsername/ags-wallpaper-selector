@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.6.1 — 2026-11-19
+## v0.6.2 — 2026-11-19
 
 - Clamp the Looks strip to 360 px and scroll it horizontally: an unbounded
   variant list no longer stretches the 1160 px control bar. The selected chip
@@ -11,6 +11,7 @@
   it across the bar) and ellipsize long names at a fixed cap.
 - Give the `↵` keycap on the accent `Set` button on-accent ink so it stays
   readable.
+- Supersedes `v0.6.1`, which was tagged before these layout fixes landed.
 
 ## v0.6.0 — 2026-11-18
 
