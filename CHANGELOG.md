@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.6.5 — 2026-11-19
+
+- Palette-hint swatches are fixed 12×12 circles; they no longer stretch into
+  ovals with the meta row.
+- The selected look is unmistakable: the accent ring now has a 2 px dark
+  separator inside it, and unselected chips sit at 55 % opacity. Supersedes the
+  ring contrast in v0.6.4.
+
 ## v0.6.4 — 2026-11-19
 
 - The `Live` dot is a 6 px circle again (it was stretching into a vertical bar

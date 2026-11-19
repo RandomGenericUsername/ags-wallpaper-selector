@@ -59,6 +59,8 @@ function keycap(text: string): Gtk.Label {
 function swatch(color: string): Gtk.DrawingArea {
   const area = new Gtk.DrawingArea();
   area.set_size_request(12, 12);
+  area.set_halign(Gtk.Align.CENTER);
+  area.set_valign(Gtk.Align.CENTER);
   area.set_tooltip_text(color);
   area.add_css_class("ws-swatch");
   area.set_draw_func((_area, cr, width, height) => {
@@ -137,6 +139,7 @@ export class ControlBar {
     metaRow.append(this.meta);
     this.swatches = new Gtk.Box({ orientation: Gtk.Orientation.HORIZONTAL, spacing: 4 });
     this.swatches.add_css_class("ws-swatches");
+    this.swatches.set_valign(Gtk.Align.CENTER);
     metaRow.append(this.swatches);
     left.append(metaRow);
 
