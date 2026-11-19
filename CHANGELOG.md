@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.6.10 — 2026-11-19
+
+- Remove the duplicate search glyph in the contact sheet: the row already
+  carries the appearance-derived magnifier, so the `Gtk.SearchEntry`'s internal
+  icons are hidden. The search pill is capped at the mock's 300 px instead of
+  stretching to the placeholder's full width.
+- Raise the contact-sheet scrim to `.94`; the mock pairs `.86` with a 30 px
+  backdrop blur, which GTK cannot render.
+
 ## v0.6.9 — 2026-11-19
 
 - Keycaps size to their text. The `↵` inside the Set button was stretching to
