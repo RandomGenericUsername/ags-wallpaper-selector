@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.6.1 — 2026-11-19
+
+- Clamp the Looks strip to 360 px and scroll it horizontally: an unbounded
+  variant list no longer stretches the 1160 px control bar. The selected chip
+  scrolls into view on `↑`/`↓`.
+- Keep the no-looks note in the same row as the `Original` chip, as the mock
+  does; the bar no longer grows a tall empty middle zone.
+- Keep the state pill beside the filename (the name no longer expands to push
+  it across the bar) and ellipsize long names at a fixed cap.
+- Give the `↵` keycap on the accent `Set` button on-accent ink so it stays
+  readable.
+
 ## v0.6.0 — 2026-11-18
 
 - Replace the centered 960×640 selector with the REQ-005 full-monitor overlay:
