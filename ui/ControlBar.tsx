@@ -52,6 +52,10 @@ function textLabel(cssClass: string, xalign = 0): Gtk.Label {
 function keycap(text: string): Gtk.Label {
   const label = new Gtk.Label({ label: text });
   label.add_css_class("ws-kbd");
+  // A keycap sizes to its text; without this it fills the parent row/button
+  // height and reads as a tall bar (visible on the Set button's ↵).
+  label.set_valign(Gtk.Align.CENTER);
+  label.set_halign(Gtk.Align.CENTER);
   return label;
 }
 

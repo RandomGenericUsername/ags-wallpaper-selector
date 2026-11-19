@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.6.9 — 2026-11-19
+
+- Keycaps size to their text. The `↵` inside the Set button was stretching to
+  the pill's full height and reading as a tall bar.
+
 ## v0.6.8 — 2026-11-19
 
 - Make the Set button's label the main child of its overlay and the progress
