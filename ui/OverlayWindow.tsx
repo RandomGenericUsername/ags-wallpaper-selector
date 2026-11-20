@@ -359,13 +359,22 @@ export function WallpaperSelectorWindow(
     return formatMeta(entry.width, entry.height, entry.bytes);
   }
 
-  /** The dominant palette swatch, so the ring matches the wallpaper (not a
-   * small chromatic detail). */
+  /** The most common palette swatch that is usable as a border: frequency
+   * order, skipping near-black/near-white dominants so the ring matches the
+   * visible artwork rather than its background. */
   function accentColor(swatches: string[]): string | null {
+    let first: string | null = null;
     for (const color of swatches) {
-      if (/^#[0-9a-f]{6}$/i.test(color)) return color;
+      const match = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(color);
+      if (match === null) continue;
+      if (first === null) first = color;
+      const r = Number.parseInt(match[1], 16);
+      const g = Number.parseInt(match[2], 16);
+      const b = Number.parseInt(match[3], 16);
+      const lightness = (Math.max(r, g, b) + Math.min(r, g, b)) / 510;
+      if (lightness >= 0.22 && lightness <= 0.82) return color;
     }
-    return null;
+    return first;
   }
 
   function ensureHint(path: string): string[] {
@@ -515,7 +524,12 @@ export function WallpaperSelectorWindow(
   }
 
   function escapePressed(): boolean {
-    if (state.phase === "committing") return true;
+    if (state.phase === "committing") {
+      // Owner decision 2026-11-20: Esc collapses the overlay while the apply
+      // continues; it never cancels the commit.
+      hideWindow();
+      return true;
+    }
     if (controlBar.gear.get_active()) {
       controlBar.gear.set_active(false);
       return true;

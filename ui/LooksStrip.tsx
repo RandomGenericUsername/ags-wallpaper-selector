@@ -118,7 +118,7 @@ export class LooksStrip {
           );
           frame
             .get_style_context()
-            .add_provider(provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION + 1);
+            .add_provider(provider, Gtk.STYLE_PROVIDER_PRIORITY_USER + 1);
         }
       }
       frame.set_can_target(false);

@@ -168,9 +168,10 @@ test("a failure keeps the preview and never marks live", () => {
   assert.match(event, /value === "error"[\s\S]{0,120}fail\(/);
 });
 
-test("Esc cancels without applying and is ignored while committing", () => {
+test("Esc cancels outside a commit and hides during one", () => {
   const escape = bodyOf("function escapePressed(");
-  assert.match(escape, /state\.phase === "committing"[\s\S]{0,40}return true/);
+  assert.match(escape, /state\.phase === "committing"[\s\S]{0,80}hideWindow\(\)/);
+  assert.equal(calls(escape, "cancelOverlay").length, 0);
   assert.equal(calls(escape, "applyWallpaper").length, 0);
   const cancel = bodyOf("function cancel(");
   assert.match(cancel, /cancelOverlay\(state\)/);

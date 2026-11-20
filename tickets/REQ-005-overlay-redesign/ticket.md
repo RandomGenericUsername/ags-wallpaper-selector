@@ -53,7 +53,7 @@ the source of truth for invariants, settings, architecture and acceptance.
 ## Source of truth and drift rule
 
 - Normative mock: `mock.html`; sha256
-  `6f877b971b4b402eaeb2447d6563784dd1a18c137ba619ab5810d10a31373543`
+  `60410943d66b326b7384cdb5949ed68f384d14404eea7df83d77dfc4e6d0db74`
   (also recorded in `mock.sha256`).
 - This ticket is the **criteria** source of truth; the mock is the **look and
   interaction** source of truth.
@@ -225,6 +225,7 @@ different focus; the distinction is only for the badge and the selected chip.
 | `grid` | `Esc` | previous state | First Esc clears a non-empty search; second closes the grid. |
 | any visible state | gear | `settings` | Popover over the current state. |
 | `settings` | `Esc` / outside click | previous state | Changes already persisted. |
+| `committing` | `Esc` | hidden | Collapse the overlay; the apply continues. On remap, show the in-flight steps or the live result. |
 | `committing` | external window hide (`ags toggle`) | hidden | Do **not** cancel the apply; on remap, reflect the live state. |
 
 ### 4.3 Commit mapping (real app)
@@ -246,7 +247,8 @@ The overlay must never implement its own apply sequence. The only write is
 ### 4.4 Cancel / reopen semantics
 
 - **Cancel (`Esc`)**: hide the overlay. The real desktop is underneath; the
-  wallpaper was never written. The mock crossfades back to the live image only
+  wallpaper was never written. During a commit, `Esc` only hides; the apply
+  continues and the next map shows the in-flight steps or the live result. The mock crossfades back to the live image only
   because the mock is itself the desktop.
 - **Reopen**: always reset focus to the live wallpaper/look. Never resume a
   stale preview.
@@ -399,14 +401,14 @@ The target is a desktop monitor, not a phone. Still:
 | `←` / `→` | Previous / next wallpaper | not committing, not grid/settings |
 | `↑` / `↓` | Previous / next look | not committing; wraps; empty note if none |
 | `Enter` | Set wallpaper | preview/look-preview only |
-| `Esc` | Cancel overlay; first closes settings, then grid (clears search first) | not committing |
+| `Esc` | Hide the overlay; first closes settings, then grid (clears search first). During committing it hides without cancelling. | any visible state |
 | `G` | Toggle contact sheet | not committing, not settings |
 | `/` | Open contact sheet and focus search | not committing, not settings |
 | `Tab` / `Shift+Tab` | Move focus within the bar / popover | native GTK |
 | `Delete` (grid/list?) | Not in this overlay; delete lives in the clipboard | — |
 
-During `committing`, all navigation keys are ignored; `Esc` is ignored until
-the commit resolves or fails.
+During `committing`, all navigation keys are ignored; `Esc` hides the overlay
+without cancelling the apply.
 
 ### 6.2 Pointer
 
@@ -437,7 +439,8 @@ on the stage, and no click-to-apply on the image.
 
 ### 6.4 Busy / guards
 
-- `committing` locks: navigation, looks, grid, settings, close.
+- `committing` locks navigation, looks, grid and settings; `Esc`/the launcher
+  hide the overlay without cancelling the apply.
 - Browse never locks.
 - The busy lock is driven by the commit state, not by a timer.
 - External `ags toggle` can hide the window during commit; the apply continues.
@@ -749,7 +752,8 @@ Composition: `make gates-ci`, `make deploy-coverage`; bump the app tag in
 
 **Interaction**
 
-- [ ] `←`/`→` browse; `↑`/`↓` looks; `Enter`/Set commits; `Esc` cancels.
+- [ ] `←`/`→` browse; `↑`/`↓` looks; `Enter`/Set commits; `Esc` cancels, and
+      hides (without cancelling) during a commit.
 - [ ] Browsing performs no write; the only write is `wallpaper set`.
 - [ ] The overlay stays open through the three commit steps and hides after
       `done`; a failure keeps the preview and never marks live.

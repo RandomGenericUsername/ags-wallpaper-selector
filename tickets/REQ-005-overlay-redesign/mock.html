@@ -1449,6 +1449,15 @@ function closeSelector(cancel = true) {
 
 function openSelector() {
   clearTimeout(commitCloseTimer);
+  if (committing) {
+    /* Reopening during the commit keeps the in-flight preview and status. */
+    closed = false;
+    el.ui.classList.remove("closed");
+    el.reopen.hidden = true;
+    applySettings();
+    render();
+    return;
+  }
   closed = false;
   el.ui.classList.remove("closed");
   el.reopen.hidden = true;
@@ -1610,6 +1619,7 @@ window.addEventListener("keydown", (event) => {
       }
       return;
     }
+    if (committing) { collapseUI(); return; }
     if (gridOpen) { closeGrid(); return; }
     if (!closed) closeSelector(true);
     return;

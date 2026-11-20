@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.6.21 — 2026-11-20
+
+- The selected-look ring now actually follows the wallpaper. The per-widget
+  provider was at APPLICATION+1, but AGS installs app CSS at USER, so the
+  global `@primary` always won (the "always green" ring). It is now USER+1.
+- Pick the most common swatch with usable lightness (0.22–0.82), so a
+  near-black background does not swallow the colour while a mostly green
+  wallpaper keeps a green ring.
+- Owner decision: `Esc` during a commit collapses the overlay without
+  cancelling the apply. Mock, ticket, `mock.sha256` and the commit-flow test
+  updated together; navigation/looks/grid/settings stay locked.
+
 ## v0.6.20 — 2026-11-20
 
 - The selected-look ring uses the **dominant** palette swatch, not the most
