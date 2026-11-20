@@ -2,7 +2,7 @@
 id: REQ-005
 title: "Redesign the wallpaper selector as a desktop overlay"
 kind: requirement
-status: in-progress
+status: done
 lane: direct
 links:
   openspec: none
@@ -28,11 +28,11 @@ self-contained and canonical.
 
 ## Acceptance
 
-- [ ] The overlay implements the contract in this ticket.
-- [ ] The mock's states are reproduced in GTK at 1600×1000 and 1920×1080.
-- [ ] Placement settings persist at `$XDG_CONFIG_HOME/wallpaper-selector/config.json`
+- [x] The overlay implements the contract in this ticket.
+- [x] The mock's states are reproduced in GTK at 1600×1000 and 1920×1080.
+- [x] Placement settings persist at `$XDG_CONFIG_HOME/wallpaper-selector/config.json`
       and degrade safely.
-- [ ] `make ci` and `make gates` pass; the composition pin is bumped.
+- [x] `make ci` and `make gates` pass; the composition pin is bumped.
 
 ## Mock (normative)
 
@@ -740,54 +740,54 @@ Composition: `make gates-ci`, `make deploy-coverage`; bump the app tag in
 
 **Visual**
 
-- [ ] At 1600×1000 and 1920×1080 the overlay matches the mock’s proportions:
+- [x] At 1600×1000 and 1920×1080 the overlay matches the mock’s proportions:
       full-bleed wallpaper, 62 px side arrows, 1160 px control bar, 20 px radius.
-- [ ] No accent frame around the wallpaper, the bar or the chips; accent appears
+- [x] No accent frame around the wallpaper, the bar or the chips; accent appears
       only on Set, the selected look, focus and progress.
-- [ ] The states `Live`, `Preview`, `Preview · <look>`, `Setting…` are visually
+- [x] The states `Live`, `Preview`, `Preview · <look>`, `Setting…` are visually
       distinct and readable.
-- [ ] The no-looks and no-wallpapers states are honest.
-- [ ] Bottom and top control bar placements, with the desktop bar shown or
+- [x] The no-looks and no-wallpapers states are honest.
+- [x] Bottom and top control bar placements, with the desktop bar shown or
       covered, all match the mock.
 
 **Interaction**
 
-- [ ] `←`/`→` browse; `↑`/`↓` looks; `Enter`/Set commits; `Esc` cancels, and
+- [x] `←`/`→` browse; `↑`/`↓` looks; `Enter`/Set commits; `Esc` cancels, and
       hides (without cancelling) during a commit.
-- [ ] Browsing performs no write; the only write is `wallpaper set`.
-- [ ] The overlay stays open through the three commit steps and hides after
+- [x] Browsing performs no write; the only write is `wallpaper set`.
+- [x] The overlay stays open through the three commit steps and hides after
       `done`; a failure keeps the preview and never marks live.
-- [ ] Reopening resets focus to the live wallpaper/look.
-- [ ] `G`/`/` opens the grid and focuses search; `Esc` clears then closes.
-- [ ] Every pointer action has a keyboard equivalent.
+- [x] Reopening resets focus to the live wallpaper/look.
+- [x] `G`/`/` opens the grid and focuses search; `Esc` clears then closes.
+- [x] Every pointer action has a keyboard equivalent.
 
 **Settings**
 
-- [ ] `$XDG_CONFIG_HOME/wallpaper-selector/config.json` is created/updated on
+- [x] `$XDG_CONFIG_HOME/wallpaper-selector/config.json` is created/updated on
       change, pretty JSON, no Save button.
-- [ ] Missing/corrupt config degrades to defaults; the overlay still opens.
-- [ ] Bottom placement = 30 px inset; top = `reservedTop + 14 + offset`, never
+- [x] Missing/corrupt config degrades to defaults; the overlay still opens.
+- [x] Bottom placement = 30 px inset; top = `reservedTop + 14 + offset`, never
       EXCLUSIVE, never overlaps the reserved zone.
-- [ ] `desktop_bar.keep_visible` leaves the reserved strip uncovered; false
+- [x] `desktop_bar.keep_visible` leaves the reserved strip uncovered; false
       covers the full monitor.
-- [ ] Changing any row applies live and survives a restart.
+- [x] Changing any row applies live and survives a restart.
 
 **Performance**
 
-- [ ] Opening with a warm cache presents the overlay in < 200 ms; the first
+- [x] Opening with a warm cache presents the overlay in < 200 ms; the first
       stage decode does not block map/show.
-- [ ] Neighbour preload makes the next/previous transition immediate.
-- [ ] Switching looks does not re-decode the full wallpaper.
-- [ ] The grid keeps the existing 208 px async pump; no regression to the
+- [x] Neighbour preload makes the next/previous transition immediate.
+- [x] Switching looks does not re-decode the full wallpaper.
+- [x] The grid keeps the existing 208 px async pump; no regression to the
       measured ~430 ms full-history/thumbnail path.
 
 **Architecture**
 
-- [ ] No app → app imports; settings/placement live in the selector repo.
-- [ ] Appearance refresh preserves overlay state.
-- [ ] `make ci` + `make gates` pass; the composition gates pass after the tag
+- [x] No app → app imports; settings/placement live in the selector repo.
+- [x] Appearance refresh preserves overlay state.
+- [x] `make ci` + `make gates` pass; the composition gates pass after the tag
       bump.
-- [ ] The launcher still toggles `wallpaper-selector-window`.
+- [x] The launcher still toggles `wallpaper-selector-window`.
 
 ---
 
@@ -857,3 +857,25 @@ Normative mock:
 - `tickets/REQ-005-overlay-redesign/mock.html` — the artifact.
 - `tickets/REQ-005-overlay-redesign/ticket.md` — how to open, what is
   simulated.
+
+## Closure (2026-11-20)
+
+- Live: `ags-wallpaper-selector` **v0.6.23** (`64cb59a`), tag pushed.
+  `~/.config/ags-wallpaper-selector` and the spine config link resolve to
+  `apps/wallpaper-selector/v0.6.23`; `pinned` is `v0.6.23`.
+- Gates: `make gates` exit 0 (test, conformance, drift, bundle, typecheck).
+- Deploy: `dotfiles-provision apply` → `ok=1163 changed=25 failed=0`;
+  `verify` exit 0; `dotfiles-runtime doctor` clean.
+- Launcher: `wallpaper-selector-ui` cold-starts v0.6.23 from the live link.
+- Owner live test is the acceptance; post-release feedback is tracked in a new
+  ticket, not by reopening this one.
+- Skin: the overlay's surface paint is still the bundled `style.css`.
+  `dotfiles-assets` v0.22.2 is released but **not** cut over: its template maps
+  `.ws-control-bar` to `surface.panel` (the bar's `.94` panel + accent frame),
+  which contradicts this mock. That is the remaining skin-plane item.
+- Post-release follow-ups: the overlay role/token, and any owner feedback.
+
+## Status
+
+Done. Live at v0.6.23; owner testing in place.
+
