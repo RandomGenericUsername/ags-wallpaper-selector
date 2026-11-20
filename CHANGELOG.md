@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.6.22 — 2026-11-20
+
+- The Set button and the bar progress line now use the focused wallpaper's
+  accent, with a computed contrast ink, instead of the applied theme's
+  `@primary` (the "always pink" button).
+- Attach the accent CSS provider to each target widget (Set button, keycap,
+  progress nodes). A GTK provider added to a parent does not style its
+  descendants, which is why the ring worked and the button did not.
+
 ## v0.6.21 — 2026-11-20
 
 - The selected-look ring now actually follows the wallpaper. The per-widget

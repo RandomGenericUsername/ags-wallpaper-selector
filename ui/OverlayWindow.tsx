@@ -401,8 +401,22 @@ export function WallpaperSelectorWindow(
     controlBar.update(controlBarModel(entry, path));
   }
 
+  function inkFor(accent: string | null): string {
+    if (accent === null) return "#111111";
+    const match = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(accent);
+    if (match === null) return "#111111";
+    const luminance =
+      (Number.parseInt(match[1], 16) * 299 +
+        Number.parseInt(match[2], 16) * 587 +
+        Number.parseInt(match[3], 16) * 114) /
+      1000;
+    return luminance > 145 ? "#111111" : "#ffffff";
+  }
+
   function controlBarModel(entry: WallpaperEntry, path: string) {
     const variants = model === null ? [] : variantsFor(model, entry.hash);
+    const swatches = ensureHint(path);
+    const accent = accentColor(swatches);
     const live = livePoint(model);
     const lookIndex = Math.min(state.focus.look, variants.length);
     const lookName = lookIndex === 0 ? "Original" : variants[lookIndex - 1]?.name ?? "Original";
@@ -421,7 +435,7 @@ export function WallpaperSelectorWindow(
       meta,
       step: committing,
       error: error !== null && !committing,
-      swatches: ensureHint(path),
+      swatches,
       lookName: variants.length === 0 ? "none yet" : lookName,
       looks: {
         wallpaperPath: entry.path,
@@ -429,8 +443,10 @@ export function WallpaperSelectorWindow(
         lookIndex,
         liveLookIndex,
         disabled: committing,
-        accent: accentColor(ensureHint(path)),
+        accent,
       },
+      accent,
+      onAccent: inkFor(accent),
       progress: state.commit?.progress ?? 0,
       setEnabled:
         !committing && !isLiveFocus(state) && model !== null && model.wallpapers.length > 0,
@@ -463,6 +479,8 @@ export function WallpaperSelectorWindow(
           disabled: true,
           accent: null,
         },
+        accent: null,
+        onAccent: "#111111",
         progress: 0,
         setEnabled: false,
         setText: "Set wallpaper",

@@ -30,6 +30,10 @@ export interface ControlBarModel {
   swatches: string[];
   lookName: string;
   looks: LooksStripModel;
+  /** Per-wallpaper accent for the commit action, or null when unavailable. */
+  accent: string | null;
+  /** Contrasting ink for the accent fill. */
+  onAccent: string;
   /** 0..1; only meaningful while committing. */
   progress: number;
   setEnabled: boolean;
@@ -101,6 +105,7 @@ export class ControlBar {
   private readonly hints: Gtk.Box;
   private readonly middle: Gtk.Box;
   readonly gear: Gtk.MenuButton;
+  private readonly accentProvider: Gtk.CssProvider;
 
   constructor(options: ControlBarOptions) {
     this.bar = new Gtk.CenterBox();
@@ -242,6 +247,7 @@ export class ControlBar {
     // The commit line runs along the bar's bottom edge.
     this.widget = new Gtk.Overlay();
     this.widget.add_css_class("ws-bar-shell");
+    this.accentProvider = new Gtk.CssProvider();
     this.widget.set_halign(Gtk.Align.CENTER);
     this.widget.set_valign(Gtk.Align.CENTER);
     this.widget.set_child(this.bar);
@@ -252,6 +258,19 @@ export class ControlBar {
     this.barProgress.set_halign(Gtk.Align.FILL);
     this.barProgress.set_visible(false);
     this.widget.add_overlay(this.barProgress);
+
+    // A provider added to a widget applies to that widget, not its
+    // descendants: attach it to every accent target explicitly.
+    for (const target of [
+      this.setButton,
+      this.setKeycap,
+      this.setProgress,
+      this.barProgress,
+    ]) {
+      target
+        .get_style_context()
+        .add_provider(this.accentProvider, Gtk.STYLE_PROVIDER_PRIORITY_USER + 1);
+    }
   }
 
   update(model: ControlBarModel): void {
@@ -292,11 +311,37 @@ export class ControlBar {
     if (model.committing) this.setButton.add_css_class("is-committing");
     else this.setButton.remove_css_class("is-committing");
 
+    this.applyAccent(model);
+
     const progress = Math.max(0, Math.min(1, model.progress));
     this.setProgress.set_fraction(progress);
     this.setProgress.set_visible(model.committing);
     this.barProgress.set_fraction(progress);
     this.barProgress.set_visible(model.committing);
+  }
+
+  /** Paint the commit action and progress line with the wallpaper's accent. */
+  private applyAccent(model: ControlBarModel): void {
+    if (
+      model.accent === null ||
+      model.live ||
+      (!model.setEnabled && !model.committing) ||
+      !/^#[0-9a-f]{6}$/i.test(model.accent)
+    ) {
+      this.accentProvider.load_from_string("");
+      return;
+    }
+    const match = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(model.onAccent);
+    const ink =
+      match === null
+        ? "rgba(0, 0, 0, 0.55)"
+        : `rgba(${Number.parseInt(match[1], 16)}, ${Number.parseInt(match[2], 16)}, ${Number.parseInt(match[3], 16)}, 0.55)`;
+    this.accentProvider.load_from_string(`
+      button.ws-set { background-color: ${model.accent}; color: ${model.onAccent}; }
+      label.ws-kbd { color: ${model.onAccent}; }
+      progressbar.ws-bar-progress progress { background-color: ${model.accent}; }
+      progressbar.ws-set-progress progress { background-color: ${ink}; }
+    `);
   }
 
   /**
