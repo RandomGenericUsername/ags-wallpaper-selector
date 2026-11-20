@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.6.11 — 2026-11-19
+
+- Fix grid typing. `GtkSearchEntry` delegates focus to its inner `GtkText`, so
+  the wrapper's `has_focus` stayed false; the key controller therefore treated
+  letters as navigation and `G` closed the grid. `isSearchFocused()` now
+  recognises the delegated focus, and the grid focus retries until the entry is
+  actually focused.
+- Raise the contact-sheet scrim to `.97`; `.94` still let terminal text read
+  through without the mock's blur.
+
 ## v0.6.10 — 2026-11-19
 
 - Remove the duplicate search glyph in the contact sheet: the row already

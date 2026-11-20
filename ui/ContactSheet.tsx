@@ -164,7 +164,10 @@ export class ContactSheet {
   }
 
   isSearchFocused(): boolean {
-    return this.search.has_focus;
+    // GtkSearchEntry delegates focus to its inner GtkText; the wrapper's
+    // has_focus stays false, so letters were treated as navigation (G closed
+    // the grid) instead of typing.
+    return this.search.has_focus || this.search.get_focus_child() !== null;
   }
 
   clearQuery(): void {
@@ -172,7 +175,18 @@ export class ContactSheet {
   }
 
   focusSearch(): void {
-    this.search.grab_focus();
+    // The stack page may still be crossfading when showGrid asks for focus;
+    // grab_focus on an unmapped entry is a no-op, which silently breaks typing.
+    let attempts = 0;
+    const attempt = () => {
+      if (this.isSearchFocused()) return false;
+      this.search.grab_focus();
+      attempts += 1;
+      return attempts < 8 && !this.isSearchFocused();
+    };
+    if (!attempt()) {
+      GLib.timeout_add(GLib.PRIORITY_DEFAULT, 60, attempt);
+    }
   }
 
   /** Responsive search width (REQ-005 §5.8: narrower below 880 px). */

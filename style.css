@@ -515,7 +515,7 @@ button.ws-set.is-live,
   padding: 32px 60px 28px;
   /* The mock pairs .86 with a 30 px backdrop blur; GTK has no blur, so the
    * scrim carries the separation instead. */
-  background-color: rgba(6, 6, 9, 0.94);
+  background-color: rgba(6, 6, 9, 0.97);
 }
 
 .ws-grid-head {
