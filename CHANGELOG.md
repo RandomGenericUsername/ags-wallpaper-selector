@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.6.16 — 2026-11-20
+
+- Fix the first-show model load. The window is mapped during construction,
+  before the `map` handler is attached, so the initial `rescan(true)` never
+  ran and the overlay rendered an empty model ("no wallpapers", black stage).
+  The handler now also runs immediately when the window is already mapped.
+
 ## v0.6.15 — 2026-11-19
 
 - Raise the commit timeout to 120 s. The 30 s failure fired before the

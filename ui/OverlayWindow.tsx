@@ -849,7 +849,7 @@ export function WallpaperSelectorWindow(
         });
         self.add_controller(keys);
 
-        self.connect("map", () => {
+        const onMap = (): void => {
           if (state.phase === "committing") {
             self.present();
             render(false);
@@ -863,7 +863,17 @@ export function WallpaperSelectorWindow(
           // ON_DEMAND so the overlay never grabs the keyboard from other
           // apps; present() asks the compositor to focus the surface.
           self.present();
-        });
+        };
+        self.connect("map", onMap);
+        // The window can be mapped during construction, before this handler is
+        // attached; without the immediate call the first show never rescans
+        // and the overlay renders an empty model ("no wallpapers").
+        if (self.get_mapped()) {
+          GLib.idle_add(GLib.PRIORITY_DEFAULT, () => {
+            onMap();
+            return false;
+          });
+        }
         self.connect("unmap", () => {
         });
       }}
