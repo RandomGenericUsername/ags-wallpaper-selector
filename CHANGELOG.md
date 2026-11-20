@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.6.15 — 2026-11-19
+
+- Raise the commit timeout to 120 s. The 30 s failure fired before the
+  runtime's palette/icon chain finished, so a successful apply showed a false
+  timeout and the overlay stayed open (the promise could no longer reconcile a
+  failed state). The 120 s watchdog still prevents a true hang.
+- The Set button's commit progress is a 3 px line at the bottom of the pill, not
+  a full-height white fill.
+- Esc remains locked during the commit per the frozen design; collapse the
+  overlay with the launcher / `SUPER+W` or `ags toggle`, which does not cancel
+  the apply. Supersedes v0.6.14 (tagged while its tests were red; never moved).
+
 ## v0.6.14 — 2026-11-19
 
 - The Set button's commit progress is a 3 px line at the bottom of the pill,

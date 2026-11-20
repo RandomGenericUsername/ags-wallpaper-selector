@@ -237,7 +237,7 @@ steps to the existing domain event:
 | 1 “Swapping pixels” | `wallpaper.state` = `applying` | progress 33 % |
 | 2 “Building palette” | `wallpaper.state` = `visible` (pixels swapped, theming in flight) | progress 66 % |
 | 3 “Updating icons” | still `visible`, until `done` | progress 100 % on `done` |
-| Failure | `error` or 30 s timeout | revert to `preview`; error text; unlock |
+| Failure | `error` or 120 s timeout | revert to `preview`; error text; unlock |
 | Success | `done` | `live = target`; hold ~1.2 s; hide |
 
 The overlay must never implement its own apply sequence. The only write is

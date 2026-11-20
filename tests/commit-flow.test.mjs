@@ -187,8 +187,8 @@ test("navigation is locked during the commit", () => {
   assert.match(CLEAN, /next\.set_sensitive\(state\.phase !== "committing"\)/);
 });
 
-test("a 30 s timeout fails the commit instead of hanging", () => {
-  assert.match(CLEAN, /const COMMIT_TIMEOUT_MS = 30_000;/);
+test("a 120 s timeout fails the commit instead of hanging", () => {
+  assert.match(CLEAN, /const COMMIT_TIMEOUT_MS = 120_000;/);
   const commit = bodyOf("function commit(");
   assert.match(commit, /COMMIT_TIMEOUT_MS/);
   assert.match(commit, /fail\("Timed out/);
