@@ -57,6 +57,7 @@ function segmented(
   for (const item of values) {
     const button = new Gtk.Button({ label: item.label });
     button.add_css_class("ws-seg-button");
+    button.set_size_request(64, 28);
     if (item.value === selected) button.add_css_class("selected");
     button.connect("clicked", () => onPick(item.value));
     buttons.set(item.value, button);

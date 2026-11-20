@@ -175,21 +175,26 @@ window#wallpaper-selector-window {
   background-image: none;
   background-color: transparent;
   opacity: 0.6;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
 }
 
 .ws-look:hover {
   opacity: 0.86;
 }
 
-/* Selected look: the mock's 2 px accent border, with a thin light halo outside
- * so a dark palette accent stays visible against a dark thumbnail. */
 .ws-look.selected {
   opacity: 1;
-  box-shadow:
-    inset 0 0 0 2px @primary,
-    0 0 0 1px alpha(@on_surface, 0.5),
-    0 5px 14px rgba(0, 0, 0, 0.32);
+}
+
+/* Painted as an overlay above the thumbnail (a button inset shadow is hidden
+ * behind the picture). */
+.ws-look-frame {
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
+}
+
+.ws-look-frame.selected {
+  border: 2px solid @primary;
+  box-shadow: inset 0 0 0 1px alpha(@on_surface, 0.92);
 }
 
 .ws-look:disabled {
@@ -348,13 +353,17 @@ button.ws-set.is-live,
 
 .ws-bar-progress {
   min-height: 2px;
+  padding: 0;
+  border: none;
   background-color: transparent;
 }
 
 .ws-set-progress trough,
 .ws-bar-progress trough {
-  background-color: transparent;
+  min-height: 2px;
+  padding: 0;
   border: none;
+  background-color: transparent;
 }
 
 .ws-set-progress progress {
@@ -363,6 +372,8 @@ button.ws-set.is-live,
 }
 
 .ws-bar-progress progress {
+  min-height: 2px;
+  border: none;
   background-color: @primary;
   border-radius: 0;
 }
@@ -457,14 +468,14 @@ button.ws-set.is-live,
 
 .ws-seg {
   padding: 2px;
-  border: 1px solid alpha(@on_surface, 0.1);
+  border: 1px solid alpha(@on_surface, 0.14);
   border-radius: 999px;
-  background-color: alpha(@on_surface, 0.06);
+  background-color: alpha(@on_surface, 0.08);
 }
 
 .ws-seg-button {
   min-height: 26px;
-  padding: 0 12px;
+  padding: 0 14px;
   border: none;
   border-radius: 999px;
   background-image: none;
@@ -480,8 +491,9 @@ button.ws-set.is-live,
 }
 
 .ws-seg-button.selected {
-  background-color: alpha(@on_surface, 0.15);
+  background-color: alpha(@on_surface, 0.24);
   color: @on_surface;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.28);
 }
 
 .ws-stepper-button {

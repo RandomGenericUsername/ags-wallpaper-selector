@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.6.18 — 2026-11-20
+
+- Draw the selected-look ring as an overlay **above** the thumbnail. A button
+  inset box-shadow is painted behind the Gtk.Picture, which is why the accent
+  border was invisible; the frame is now the mock's accent border with a white
+  inner line.
+- Give the settings segmented buttons an explicit 64x28 allocation and a
+  stronger selected fill; the GTK button padding/min-height was not reaching
+  them inside the popover.
+- Pin the bar progress line to 2 px on every node (bar, trough, progress).
+
 ## v0.6.17 — 2026-11-20
 
 - Selected look: use the mock's 2 px accent border again (the check badge is

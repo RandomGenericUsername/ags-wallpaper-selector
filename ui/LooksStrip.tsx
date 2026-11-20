@@ -102,6 +102,13 @@ export class LooksStrip {
       picture.set_content_fit(Gtk.ContentFit.COVER);
       picture.set_size_request(54, 34);
       overlay.set_child(picture);
+      // The ring must be a widget above the picture: an inset box-shadow on the
+      // button is painted behind the picture and is therefore invisible.
+      const frame = new Gtk.Box();
+      frame.add_css_class("ws-look-frame");
+      if (index === model.lookIndex) frame.add_css_class("selected");
+      frame.set_can_target(false);
+      overlay.add_overlay(frame);
       const texture = cachedTexture(choice.path, LOOK_DIM);
       if (texture !== null) picture.set_paintable(texture);
       else {
