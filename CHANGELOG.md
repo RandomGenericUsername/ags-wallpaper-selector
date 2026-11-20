@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.6.12 — 2026-11-19
+
+- One search pill, not a pill inside a pill: `Gtk.SearchEntry` is composite and
+  Arc paints both its `entry` and inner `text` nodes with their own background,
+  border and focus ring. Both are flattened; only the 300 px row owns the pill.
+- Constrain the entry with `width-chars` as well as `max-width-chars`, so the
+  search row stops growing to the placeholder's natural width.
+
 ## v0.6.11 — 2026-11-19
 
 - Fix grid typing. `GtkSearchEntry` delegates focus to its inner `GtkText`, so

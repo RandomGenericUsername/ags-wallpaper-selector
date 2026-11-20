@@ -88,9 +88,10 @@ export class ContactSheet {
     this.searchRow.set_size_request(300, 36);
     this.searchRow.append(options.searchIcon);
     this.search = new Gtk.SearchEntry();
-    this.search.set_hexpand(true);
-    // Cap the entry's natural width so the row stays the mock's 300 px pill
-    // instead of growing to the placeholder's full width.
+    this.search.set_hexpand(false);
+    // width-chars sets the natural size; max-width-chars alone does not stop
+    // the row from growing to the placeholder's full width.
+    this.search.set_width_chars(18);
     this.search.set_max_width_chars(18);
     this.search.set_placeholder_text("Search wallpapers…");
     this.search.connect("search-changed", () => {

@@ -555,14 +555,26 @@ button.ws-set.is-live,
   opacity: 0;
 }
 
-.ws-grid-search entry {
+/* One pill, not a pill inside a pill: GtkSearchEntry is composite, and Arc
+ * paints both the `entry` node and its inner `text` node with their own
+ * background/border/focus ring. Only the row owns the pill. */
+.ws-grid-search entry,
+.ws-grid-search entry > text,
+.ws-grid-search entry text {
   min-height: 0;
   padding: 0;
   border: none;
+  border-radius: 0;
+  background-image: none;
   background-color: transparent;
   box-shadow: none;
+  outline: none;
   color: @on_surface;
   font-size: 12.5px;
+}
+
+.ws-grid-search:focus-within {
+  border-color: alpha(@on_surface, 0.34);
 }
 
 .ws-search-icon {
