@@ -261,6 +261,9 @@ export class ContactSheet {
       const dot = new Gtk.Box();
       dot.add_css_class("ws-grid-live-dot");
       dot.set_can_target(false);
+      dot.set_valign(Gtk.Align.CENTER);
+      dot.set_halign(Gtk.Align.CENTER);
+      dot.set_size_request(6, 6);
       badge.append(dot);
       badge.append(new Gtk.Label({ label: "Live" }));
       art.add_overlay(badge);

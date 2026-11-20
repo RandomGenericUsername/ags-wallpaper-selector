@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.6.13 — 2026-11-19
+
+- The grid card's `Live` dot is a 6 px circle; the badge box was inheriting
+  fill alignment and stretching it into a vertical column.
+
 ## v0.6.12 — 2026-11-19
 
 - One search pill, not a pill inside a pill: `Gtk.SearchEntry` is composite and
