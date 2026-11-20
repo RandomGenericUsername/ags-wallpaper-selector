@@ -619,8 +619,9 @@ export function WallpaperSelectorWindow(
     state = finishCommit(state);
     render(false);
     toast(`${entry.name} is live`);
-    // `done` also means new variants may exist; rescan without moving focus.
-    rescan(false);
+    // Do NOT rebuild the model here: the rebuilt gallery can clamp/reorder the
+    // focused look while the overlay is still on screen, so the user saw a
+    // different wallpaper than the one just set. The next map rescans to live.
     if (holdTimer !== null) GLib.source_remove(holdTimer);
     holdTimer = GLib.timeout_add(GLib.PRIORITY_DEFAULT, COMMIT_HOLD_MS, () => {
       holdTimer = null;

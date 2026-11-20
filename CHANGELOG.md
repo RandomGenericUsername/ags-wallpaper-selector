@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.6.23 — 2026-11-20
+
+- Keep the just-applied wallpaper on screen through `done`. The post-commit
+  rescan rebuilt the gallery, which pins the live wallpaper first, so the
+  unchanged focus index pointed at a different wallpaper. The rescan is
+  deferred to the next open, which reopens on the live point.
+
 ## v0.6.22 — 2026-11-20
 
 - The Set button and the bar progress line now use the focused wallpaper's
