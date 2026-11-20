@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.6.17 — 2026-11-20
+
+- Selected look: use the mock's 2 px accent border again (the check badge is
+  gone) with a thin light halo so a dark accent stays visible; unselected chips
+  sit at 60 %.
+- Slim the control bar: 10 px vertical padding, compact keycaps (`line-height:
+  1`), and a 2 px bar progress line. The Set fill stays a 3 px bottom line.
+- Settings popover: match the mock's 322 px total width, restore the row
+  separators, clear the GTK theme's `background-image` on segmented/stepper
+  buttons, and centre the stepper value.
+
 ## v0.6.16 — 2026-11-20
 
 - Fix the first-show model load. The window is mapped during construction,

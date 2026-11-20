@@ -115,7 +115,9 @@ export class SettingsPopover {
         });
       },
     );
-    content.append(row("Control bar", null, this.position.widget));
+    const positionRow = row("Control bar", null, this.position.widget);
+    positionRow.add_css_class("first");
+    content.append(positionRow);
 
     this.desktop = segmented(
       [
@@ -149,6 +151,7 @@ export class SettingsPopover {
       width_chars: 3,
     });
     this.offsetValue.add_css_class("ws-stepper-value");
+    this.offsetValue.set_xalign(0.5);
     this.plus = new Gtk.Button({ label: "+" });
     this.plus.add_css_class("ws-stepper-button");
     this.plus.set_tooltip_text("Increase top offset");
