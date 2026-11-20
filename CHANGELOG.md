@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.6.20 — 2026-11-20
+
+- The selected-look ring uses the **dominant** palette swatch, not the most
+  chromatic one. A mostly green wallpaper could surface a small pink detail as
+  the ring, which read as unrelated to the artwork.
+
 ## v0.6.19 — 2026-11-20
 
 - The selected-look border follows the focused wallpaper/look palette hint
