@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.6.19 — 2026-11-20
+
+- The selected-look border follows the focused wallpaper/look palette hint
+  (most chromatic swatch), not the applied global `@primary`. A per-widget CSS
+  provider overrides only the border colour; the white inner line stays for
+  contrast.
+
 ## v0.6.18 — 2026-11-20
 
 - Draw the selected-look ring as an overlay **above** the thumbnail. A button

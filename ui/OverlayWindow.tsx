@@ -359,6 +359,29 @@ export function WallpaperSelectorWindow(
     return formatMeta(entry.width, entry.height, entry.bytes);
   }
 
+  /** The most chromatic palette hint, for the focused look's ring. */
+  function accentColor(swatches: string[]): string | null {
+    let best: string | null = null;
+    let bestScore = -1;
+    for (const color of swatches) {
+      const match = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(color);
+      if (match === null) continue;
+      const r = Number.parseInt(match[1], 16);
+      const g = Number.parseInt(match[2], 16);
+      const b = Number.parseInt(match[3], 16);
+      const max = Math.max(r, g, b);
+      const min = Math.min(r, g, b);
+      const saturation = max === 0 ? 0 : (max - min) / max;
+      const lightness = (max + min) / 510;
+      const score = saturation * (1 - Math.abs(lightness - 0.55));
+      if (score > bestScore) {
+        bestScore = score;
+        best = color;
+      }
+    }
+    return best;
+  }
+
   function ensureHint(path: string): string[] {
     const cached = hintCache.get(path);
     if (cached !== undefined) return cached;
@@ -411,6 +434,7 @@ export function WallpaperSelectorWindow(
         lookIndex,
         liveLookIndex,
         disabled: committing,
+        accent: accentColor(ensureHint(path)),
       },
       progress: state.commit?.progress ?? 0,
       setEnabled:
@@ -442,6 +466,7 @@ export function WallpaperSelectorWindow(
           lookIndex: 0,
           liveLookIndex: null,
           disabled: true,
+          accent: null,
         },
         progress: 0,
         setEnabled: false,

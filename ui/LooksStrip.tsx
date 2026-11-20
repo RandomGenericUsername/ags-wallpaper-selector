@@ -26,6 +26,8 @@ export interface LooksStripModel {
   lookIndex: number;
   liveLookIndex: number | null;
   disabled: boolean;
+  /** Per-look accent from the wallpaper palette hint (never the global skin). */
+  accent: string | null;
 }
 
 export class LooksStrip {
@@ -106,7 +108,19 @@ export class LooksStrip {
       // button is painted behind the picture and is therefore invisible.
       const frame = new Gtk.Box();
       frame.add_css_class("ws-look-frame");
-      if (index === model.lookIndex) frame.add_css_class("selected");
+      if (index === model.lookIndex) {
+        frame.add_css_class("selected");
+        if (model.accent !== null && /^#[0-9a-f]{6}$/i.test(model.accent)) {
+          // The ring follows the focused wallpaper/look, not the applied theme.
+          const provider = new Gtk.CssProvider();
+          provider.load_from_string(
+            `.ws-look-frame.selected { border-color: ${model.accent}; }`,
+          );
+          frame
+            .get_style_context()
+            .add_provider(provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION + 1);
+        }
+      }
       frame.set_can_target(false);
       overlay.add_overlay(frame);
       const texture = cachedTexture(choice.path, LOOK_DIM);
