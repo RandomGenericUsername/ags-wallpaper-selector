@@ -504,7 +504,12 @@ export function WallpaperSelectorWindow(
   }
 
   function escapePressed(): boolean {
-    if (state.phase === "committing") return true;
+    if (state.phase === "committing") {
+      // Collapse the overlay; the apply keeps running and the next map shows
+      // the in-flight steps or the resulting live state (REQ-005 §4.2).
+      hideWindow();
+      return true;
+    }
     if (controlBar.gear.get_active()) {
       controlBar.gear.set_active(false);
       return true;
@@ -538,18 +543,7 @@ export function WallpaperSelectorWindow(
     state = beginCommit(state);
     render(false);
     controlBar.gear.set_active(false);
-    if (commitTimeout !== null) GLib.source_remove(commitTimeout);
-    commitTimeout = GLib.timeout_add(
-      GLib.PRIORITY_DEFAULT,
-      COMMIT_TIMEOUT_MS,
-      () => {
-        commitTimeout = null;
-        if (state.phase === "committing") {
-          fail("Timed out while setting the wallpaper.");
-        }
-        return false;
-      },
-    );
+    armCommitTimeout();
 
     applyWallpaper(target)
       .then(() => {
@@ -564,6 +558,24 @@ export function WallpaperSelectorWindow(
           fail(`Failed to set the wallpaper: ${error}`);
         }
       });
+  }
+
+  function armCommitTimeout(): void {
+    if (commitTimeout !== null) GLib.source_remove(commitTimeout);
+    commitTimeout = GLib.timeout_add(
+      GLib.PRIORITY_DEFAULT,
+      COMMIT_TIMEOUT_MS,
+      () => {
+        commitTimeout = null;
+        if (state.phase === "committing") {
+          // A long palette/icon phase is not a failure. Keep the commit alive,
+          // tell the user, and wait for the event or the command promise.
+          toast("Still setting wallpaper…");
+          armCommitTimeout();
+        }
+        return false;
+      },
+    );
   }
 
   function done(entry: WallpaperEntry): void {
@@ -645,9 +657,11 @@ export function WallpaperSelectorWindow(
     if (state.phase === "committing") {
       if (value === "applying") {
         state = commitEvent(state, { state: "applying" });
+        armCommitTimeout();
         render(false);
       } else if (value === "visible") {
         state = commitEvent(state, { state: "visible" });
+        armCommitTimeout();
         render(false);
       } else if (value === "done") {
         const entry = focusEntry();

@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.6.14 — 2026-11-19
+
+- The Set button's commit progress is a 3 px line at the bottom of the pill,
+  not a full-height white fill.
+- A slow apply no longer fails the overlay at 30 s. The commit watchdog now
+  shows `Still setting wallpaper…` and re-arms; the event stream or the command
+  promise still finishes the commit and hides the overlay.
+- `Esc` during a commit collapses the overlay without cancelling the apply; the
+  next map shows the in-flight steps or the resulting live state.
+
 ## v0.6.13 — 2026-11-19
 
 - The grid card's `Live` dot is a 6 px circle; the badge box was inheriting

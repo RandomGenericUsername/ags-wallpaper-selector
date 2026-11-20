@@ -210,7 +210,7 @@ export class ControlBar {
     this.setProgress = new Gtk.ProgressBar();
     this.setProgress.add_css_class("ws-set-progress");
     this.setProgress.set_show_text(false);
-    this.setProgress.set_valign(Gtk.Align.FILL);
+    this.setProgress.set_valign(Gtk.Align.END);
     this.setProgress.set_halign(Gtk.Align.FILL);
     this.setProgress.set_can_target(false);
     setSurface.add_overlay(this.setProgress);

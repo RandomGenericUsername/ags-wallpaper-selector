@@ -357,7 +357,7 @@ button.ws-set.is-live,
 
 .ws-set-progress,
 .ws-bar-progress {
-  min-height: 2px;
+  min-height: 3px;
   background-color: transparent;
 }
 
@@ -368,8 +368,8 @@ button.ws-set.is-live,
 }
 
 .ws-set-progress progress {
-  background-color: alpha(@on_surface, 0.22);
-  border-radius: 999px;
+  background-color: alpha(@on_primary, 0.55);
+  border-radius: 0 0 999px 999px;
 }
 
 .ws-bar-progress progress {
