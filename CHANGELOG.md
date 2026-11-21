@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.6.27 — 2026-11-20
+
+- Settings gear: open a fresh `Gtk.Popover` anchored to the whole button on each
+  open and unparent/detach it on close (the sound-panel pattern). The reused
+  popover left a stale surface/grab behind, so the third same-spot click was
+  swallowed until the pointer moved.
+
 ## v0.6.26 — 2026-11-20
 
 - Settings gear: use the sound-panel pattern — a plain `Gtk.Button` that parents

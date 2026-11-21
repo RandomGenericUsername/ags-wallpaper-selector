@@ -249,7 +249,7 @@ export function WallpaperSelectorWindow(
 
   const controlBar = new ControlBar({
     width: barWidth,
-    gearPopover: settingsPopover.popover,
+    settings: settingsPopover,
     onSet: () => commit(),
     onLookSelect: (index) => {
       if (state.phase === "committing") return;

@@ -1,6 +1,6 @@
 {
   "name": "ags-wallpaper-selector",
-  "version": "0.6.26",
+  "version": "0.6.27",
   "private": true,
   "type": "module",
   "description": "Standalone AGS wallpaper selector (instance wallpaper-selector, config dir ags-wallpaper-selector).",
