@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.6.24 — 2026-11-20
+
+- Settings popover: the native `popover > contents` shell no longer clips the
+  skin's settings surface; the app-owned shell is transparent with radius 0 and
+  the skin's `surface.card` panel owns the visible rounding.
+- Selected-look frame: the app keeps a radius fallback, and the skin template
+  supplies `surface.control.radius` for the frame (assets v0.22.3). No token
+  reads or CSS inheritance in the app; layout stays TSX/CSS-owned.
+
 ## v0.6.23 — 2026-11-20
 
 - Keep the just-applied wallpaper on screen through `done`. The post-commit

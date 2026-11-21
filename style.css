@@ -397,6 +397,7 @@ button.ws-set.is-live,
 .ws-settings-popover {
   padding: 0;
   border: none;
+  border-radius: 0;
   background-color: transparent;
   box-shadow: none;
 }
@@ -404,6 +405,7 @@ button.ws-set.is-live,
 .ws-settings-popover > contents {
   padding: 0;
   border: none;
+  border-radius: 0;
   background-color: transparent;
   box-shadow: none;
 }
