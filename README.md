@@ -164,8 +164,8 @@ source of surface paint. The overlay is a layer-shell **`surface.panel`**, so
 the active skin paints it and the skin's `[host]` policy gives its radius/border
 from the compositor (Hyprland `rounding`/`border_size`).
 
-Implementation rules (also in the batch handoff and `dotfiles-assets`
-`skins/README.md`):
+Implementation rules (also in `dotfiles-v3/docs/117-redesign-batch.md` and
+`dotfiles-assets/skins/README.md`):
 
 - **App owns layout/structure/content; the skin owns paint/type/ink.** The skin
   template styles the app-declared classes with role tokens (the sound-panel
@@ -191,3 +191,6 @@ Implementation rules (also in the batch handoff and `dotfiles-assets`
 - Assets **v0.22.3** is required for the frame radius. The `surface.overlay`
   experiment (contracts v0.14.0 / assets v0.23.0) is **not consumed**; the
   release line maps the overlay to `surface.panel`.
+
+Canonical batch record: `dotfiles-v3/docs/117-redesign-batch.md` (includes the
+pending design index for clipboard and the bar panels).

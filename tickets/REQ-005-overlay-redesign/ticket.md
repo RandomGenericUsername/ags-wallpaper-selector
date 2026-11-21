@@ -910,5 +910,5 @@ v0.2.10 pins app v0.6.29 + assets v0.22.3 + engine v0.1.97.
 ## Status
 
 Done. Live at v0.6.29; the skin/host architecture and the in-page settings are
-documented in `README.md`, the batch handoff, and `dotfiles-assets`
-`skins/README.md`.
+documented in `README.md`, `dotfiles-v3/docs/117-redesign-batch.md`, and
+`dotfiles-assets/skins/README.md`.
