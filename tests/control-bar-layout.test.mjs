@@ -103,8 +103,8 @@ test("the looks strip is Original + chips with a live dot the app owns", () => {
 test("the commit action and the gear are the right zone and order", () => {
   assert.match(BAR, /const actions = new Gtk\.Box/);
   assert.ok(BAR.indexOf("actions.append(gear)") < BAR.indexOf("actions.append(this.setButton)"));
-  assert.match(BAR, /new Gtk\.MenuButton\(\)/);
-  assert.match(BAR, /set_popover\(options\.gearPopover\)/);
+  assert.match(BAR, /new Gtk\.Button\(\)/);
+  assert.match(BAR, /set_parent\(gear\)/);
 });
 
 test("the bar offers no click-to-apply on the wallpaper stage", () => {

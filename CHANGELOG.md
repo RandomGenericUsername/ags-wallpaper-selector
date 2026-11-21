@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.6.26 — 2026-11-20
+
+- Settings gear: use the sound-panel pattern — a plain `Gtk.Button` that parents
+  and pops a `Gtk.Popover` — instead of `Gtk.MenuButton`, whose inner button
+  shrank the hit target to the glyph. The full 42 px circle is now clickable.
+
 ## v0.6.25 — 2026-11-20
 
 - Look chips: the selected state now replaces the skin's base control hairline

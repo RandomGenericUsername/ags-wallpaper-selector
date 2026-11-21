@@ -104,7 +104,8 @@ export class ControlBar {
   private readonly barProgress: Gtk.ProgressBar;
   private readonly hints: Gtk.Box;
   private readonly middle: Gtk.Box;
-  readonly gear: Gtk.MenuButton;
+  readonly gear: Gtk.Button;
+  private readonly gearPopover: Gtk.Popover;
   private readonly accentProvider: Gtk.CssProvider;
 
   constructor(options: ControlBarOptions) {
@@ -180,19 +181,31 @@ export class ControlBar {
     const actions = new Gtk.Box({ orientation: Gtk.Orientation.HORIZONTAL, spacing: 8 });
     actions.add_css_class("ws-actions");
 
-    const gear = new Gtk.MenuButton();
+    this.gearPopover = options.gearPopover;
+    const gear = new Gtk.Button();
     gear.add_css_class("ws-gear");
     gear.set_size_request(42, 42);
     gear.set_halign(Gtk.Align.CENTER);
     gear.set_valign(Gtk.Align.CENTER);
     gear.set_tooltip_text("Placement settings");
     gear.update_property([Gtk.AccessibleProperty.LABEL], ["Placement settings"]);
-    gear.set_popover(options.gearPopover);
     const gearIcon = new Gtk.Image({ icon_name: "emblem-system-symbolic", pixel_size: 16 });
     gear.set_child(gearIcon);
-    gear.connect("notify::active", () => {
-      if (gear.get_active()) gear.add_css_class("is-active");
-      else gear.remove_css_class("is-active");
+    // The sound-panel pattern: the whole button is the hit target; the popover
+    // is parented to it while open, not to an inner menu-button node.
+    gear.connect("clicked", () => {
+      if (this.gearPopover.get_visible()) {
+        this.gearPopover.popdown();
+        return;
+      }
+      this.gearPopover.set_parent(gear);
+      gear.add_css_class("is-active");
+      this.gearPopover.popup();
+    });
+    this.gearPopover.connect("closed", () => {
+      gear.remove_css_class("is-active");
+      this.gearPopover.unparent();
+      gear.grab_focus();
     });
     actions.append(gear);
     this.gear = gear;
@@ -351,6 +364,14 @@ export class ControlBar {
   setResponsive(width: number): void {
     this.hints.set_visible(width >= 1180);
     this.middle.set_visible(width >= 980);
+  }
+
+  isSettingsOpen(): boolean {
+    return this.gearPopover.get_visible();
+  }
+
+  closeSettings(): void {
+    if (this.gearPopover.get_visible()) this.gearPopover.popdown();
   }
 
   /** Focus the commit action (documented tab order starts here). */
