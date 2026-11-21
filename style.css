@@ -188,7 +188,7 @@ window#wallpaper-selector-window {
 /* Painted as an overlay above the thumbnail (a button inset shadow is hidden
  * behind the picture). */
 .ws-look-frame {
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  border: none;
   border-radius: 8px;
 }
 

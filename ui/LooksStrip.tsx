@@ -110,6 +110,15 @@ export class LooksStrip {
       frame.add_css_class("ws-look-frame");
       if (index === model.lookIndex) {
         frame.add_css_class("selected");
+        // The selected state replaces the skin's base control hairline; the
+        // app ring is the only border on the chip.
+        const selectedProvider = new Gtk.CssProvider();
+        selectedProvider.load_from_string(
+          `.ws-look.selected { border-color: transparent; }`,
+        );
+        chip
+          .get_style_context()
+          .add_provider(selectedProvider, Gtk.STYLE_PROVIDER_PRIORITY_USER + 1);
         if (model.accent !== null && /^#[0-9a-f]{6}$/i.test(model.accent)) {
           // The ring follows the focused wallpaper/look, not the applied theme.
           const provider = new Gtk.CssProvider();

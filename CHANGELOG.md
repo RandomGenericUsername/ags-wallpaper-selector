@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.6.25 — 2026-11-20
+
+- Look chips: the selected state now replaces the skin's base control hairline
+  instead of stacking on it. Unselected chips show the skin border only; the
+  selected chip shows the app ring only (skin border suppressed at the widget).
+  This removes the double border (rounded app ring inside the square skin chip)
+  without adding a skin mechanism.
+
 ## v0.6.24 — 2026-11-20
 
 - Settings popover: the native `popover > contents` shell no longer clips the
