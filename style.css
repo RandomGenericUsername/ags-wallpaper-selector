@@ -396,6 +396,11 @@ button.ws-set.is-live,
 
 /* ── settings popover ─────────────────────────────────────────────────── */
 
+.ws-settings-catcher {
+  /* 1% fill so the empty overlay is hit-testable (the mock catcher rule). */
+  background-color: rgba(0, 0, 0, 0.01);
+}
+
 .ws-settings-popover {
   padding: 0;
   border: none;

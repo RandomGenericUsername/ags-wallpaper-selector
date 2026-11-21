@@ -42,7 +42,7 @@ export interface ControlBarModel {
 
 export interface ControlBarOptions {
   width: number;
-  gearPopover: Gtk.Popover;
+  onToggleSettings(): void;
   onSet(): void;
   onLookSelect(index: number): void;
 }
@@ -104,7 +104,7 @@ export class ControlBar {
   private readonly barProgress: Gtk.ProgressBar;
   private readonly hints: Gtk.Box;
   private readonly middle: Gtk.Box;
-  readonly gear: Gtk.MenuButton;
+  readonly gear: Gtk.Button;
   private readonly accentProvider: Gtk.CssProvider;
 
   constructor(options: ControlBarOptions) {
@@ -180,20 +180,16 @@ export class ControlBar {
     const actions = new Gtk.Box({ orientation: Gtk.Orientation.HORIZONTAL, spacing: 8 });
     actions.add_css_class("ws-actions");
 
-    const gear = new Gtk.MenuButton();
+    const gear = new Gtk.Button();
     gear.add_css_class("ws-gear");
     gear.set_size_request(42, 42);
     gear.set_halign(Gtk.Align.CENTER);
     gear.set_valign(Gtk.Align.CENTER);
     gear.set_tooltip_text("Placement settings");
     gear.update_property([Gtk.AccessibleProperty.LABEL], ["Placement settings"]);
-    gear.set_popover(options.gearPopover);
     const gearIcon = new Gtk.Image({ icon_name: "emblem-system-symbolic", pixel_size: 16 });
     gear.set_child(gearIcon);
-    gear.connect("notify::active", () => {
-      if (gear.get_active()) gear.add_css_class("is-active");
-      else gear.remove_css_class("is-active");
-    });
+    gear.connect("clicked", () => options.onToggleSettings());
     actions.append(gear);
     this.gear = gear;
 
@@ -351,6 +347,11 @@ export class ControlBar {
   setResponsive(width: number): void {
     this.hints.set_visible(width >= 1180);
     this.middle.set_visible(width >= 980);
+  }
+
+  setSettingsOpen(open: boolean): void {
+    if (open) this.gear.add_css_class("is-active");
+    else this.gear.remove_css_class("is-active");
   }
 
   /** Focus the commit action (documented tab order starts here). */

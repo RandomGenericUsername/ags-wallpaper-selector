@@ -67,7 +67,7 @@ function segmented(
 }
 
 export class SettingsPopover {
-  readonly popover: Gtk.Popover;
+  readonly widget: Gtk.Box;
   private readonly offsetRow: Gtk.Box;
   private readonly offsetValue: Gtk.Label;
   private readonly minus: Gtk.Button;
@@ -81,10 +81,6 @@ export class SettingsPopover {
   constructor(options: SettingsPopoverOptions) {
     this.settings = options.initial;
     this.onChange = options.onChange;
-
-    this.popover = new Gtk.Popover();
-    this.popover.add_css_class("ws-settings-popover");
-    this.popover.set_has_arrow(false);
 
     const content = new Gtk.Box({
       orientation: Gtk.Orientation.VERTICAL,
@@ -178,7 +174,7 @@ export class SettingsPopover {
     const footer = label("Changes save immediately.", "ws-settings-foot");
     content.append(footer);
 
-    this.popover.set_child(content);
+    this.widget = content;
     this.sync();
   }
 

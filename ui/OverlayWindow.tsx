@@ -229,6 +229,7 @@ export function WallpaperSelectorWindow(
   let commitTimeout: number | null = null;
   let holdTimer: number | null = null;
   let toastTimer: number | null = null;
+  let settingsPanelOpen = false;
 
   const stage = new StageView(monitorWidth, monitorHeight);
   const barWidth = Math.max(280, Math.min(1160, monitorWidth - 56));
@@ -249,7 +250,7 @@ export function WallpaperSelectorWindow(
 
   const controlBar = new ControlBar({
     width: barWidth,
-    gearPopover: settingsPopover.popover,
+    onToggleSettings: () => setSettingsOpen(!settingsPanelOpen),
     onSet: () => commit(),
     onLookSelect: (index) => {
       if (state.phase === "committing") return;
@@ -297,6 +298,28 @@ export function WallpaperSelectorWindow(
     );
   }
 
+  function applySettingsPlacement(): void {
+    const barEnd = Math.max(18, Math.round((monitorWidth - barWidth) / 2) + 18);
+    settingsPanel.set_margin_end(barEnd);
+    if (settings.control_bar.position === "top") {
+      settingsPanel.set_valign(Gtk.Align.START);
+      settingsPanel.set_margin_top(controlBar.widget.get_margin_top() + 108);
+      settingsPanel.set_margin_bottom(0);
+    } else {
+      settingsPanel.set_valign(Gtk.Align.END);
+      settingsPanel.set_margin_bottom(controlBar.widget.get_margin_bottom() + 108);
+      settingsPanel.set_margin_top(0);
+    }
+  }
+
+  function setSettingsOpen(open: boolean): void {
+    settingsPanelOpen = open;
+    settingsPanel.set_visible(open);
+    settingsCatcher.set_visible(open);
+    controlBar.setSettingsOpen(open);
+    if (open) applySettingsPlacement();
+  }
+
   function applyPlacement(): void {
     const placement = controlBarPlacement(
       settings.control_bar.position,
@@ -319,6 +342,7 @@ export function WallpaperSelectorWindow(
     controlBar.widget.set_margin_bottom(
       monitorWidth < 880 ? 18 : placement.marginBottom,
     );
+    applySettingsPlacement();
   }
 
   function toast(message: string): void {
@@ -524,7 +548,7 @@ export function WallpaperSelectorWindow(
 
   function showGrid(focusSearch: boolean): void {
     if (state.phase === "committing") return;
-    controlBar.gear.set_active(false);
+    setSettingsOpen(false);
     state = openGrid(state, true);
     contactSheet.setQuery("");
     render(false);
@@ -548,8 +572,8 @@ export function WallpaperSelectorWindow(
       hideWindow();
       return true;
     }
-    if (controlBar.gear.get_active()) {
-      controlBar.gear.set_active(false);
+    if (settingsPanelOpen) {
+      setSettingsOpen(false);
       return true;
     }
     if (state.page === "grid") {
@@ -580,7 +604,7 @@ export function WallpaperSelectorWindow(
     const target = lookPathOf(model, entry, state.focus.look);
     state = beginCommit(state);
     render(false);
-    controlBar.gear.set_active(false);
+    setSettingsOpen(false);
     if (commitTimeout !== null) GLib.source_remove(commitTimeout);
     commitTimeout = GLib.timeout_add(
       GLib.PRIORITY_DEFAULT,
@@ -770,6 +794,26 @@ export function WallpaperSelectorWindow(
   mainPage.add_overlay(next);
   mainPage.add_overlay(controlBar.widget);
 
+  // The mock's settings is an in-page panel (`.settings-pop`), not a compositor
+  // popup: a popup leaves pointer focus on its surface until motion, which is
+  // why the third same-spot gear click was swallowed. A full-window catcher
+  // dismisses it; the panel sits above the catcher and the bar sits below.
+  const settingsCatcher = new Gtk.Box();
+  settingsCatcher.add_css_class("ws-settings-catcher");
+  settingsCatcher.set_hexpand(true);
+  settingsCatcher.set_vexpand(true);
+  settingsCatcher.set_visible(false);
+  const settingsCatcherClick = new Gtk.GestureClick();
+  settingsCatcherClick.connect("pressed", () => setSettingsOpen(false));
+  settingsCatcher.add_controller(settingsCatcherClick);
+  mainPage.add_overlay(settingsCatcher);
+
+  const settingsPanel = settingsPopover.widget;
+  settingsPanel.set_halign(Gtk.Align.END);
+  settingsPanel.set_valign(Gtk.Align.END);
+  settingsPanel.set_visible(false);
+  mainPage.add_overlay(settingsPanel);
+
   const root = new Gtk.Stack({
     transition_type: Gtk.StackTransitionType.CROSSFADE,
     transition_duration: 220,
@@ -835,7 +879,7 @@ export function WallpaperSelectorWindow(
           if (keyval === Gdk.KEY_Escape) return escapePressed();
           // The settings popover owns its own focus/Esc; do not navigate the
           // overlay behind an open popover.
-          if (controlBar.gear.get_active()) return false;
+          if (settingsPanelOpen) return false;
           const typing = contactSheet.isSearchFocused();
           if (state.page === "grid") {
             if (typing) {

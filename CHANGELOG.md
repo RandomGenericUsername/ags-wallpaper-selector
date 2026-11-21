@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.6.29 — 2026-11-20
+
+- Settings are now the mock's **in-page panel** (`.settings-pop`), not a
+  `Gtk.Popover`. Any GTK popover is a separate compositor popup; after it
+  unmaps, the compositor keeps pointer focus there until motion, swallowing the
+  third same-spot click. The panel lives in the main overlay with a full-window
+  click catcher: the gear toggles it, an outside click closes it, and the main
+  window never loses pointer focus. The skin still paints `.ws-settings`.
+
 ## v0.6.28 — 2026-11-20
 
 - Settings gear: return to the native `Gtk.MenuButton` toggle (its own popover
