@@ -879,3 +879,36 @@ Normative mock:
 
 Done. Live at v0.6.23; owner testing in place.
 
+
+## Post-release implementation notes (2026-11-21)
+
+Live app **v0.6.29** (in-page settings) on assets **v0.22.3**; composition
+v0.2.10 pins app v0.6.29 + assets v0.22.3 + engine v0.1.97.
+
+- **Skin architecture:** the overlay is a layer-shell `surface.panel`; the
+  active skin paints it; `[host]` delegates panel/card/control/cell radii and
+  border widths to Hyprland. The app owns layout/content; the app does not read
+  appearance tokens or mimic role geometry with CSS inheritance.
+- **Deviation from §5.5:** the design specified a `Gtk.Popover` for settings.
+  In practice a popover is a separate compositor popup: click 2 closes it and
+  is consumed; the compositor keeps pointer focus on the unmapped popup until
+  motion, so the third same-spot click is swallowed. The mock's own settings is
+  an **in-page** `.settings-pop`; the app now renders `.ws-settings` inside the
+  main overlay with a full-window click catcher. The skin still paints
+  `.ws-settings`.
+- **Looks:** the selected ring is an overlay above the picture; the skin
+  template supplies its radius (`surface.control.radius`, assets v0.22.3); the
+  colour is the focused wallpaper's palette hint via a per-widget USER+1
+  provider. The selected state suppresses the skin's base hairline (one ring).
+- **Commit action:** the Set button and bar progress use the same per-wallpaper
+  accent with computed contrast ink.
+- **Gear:** plain `Gtk.Button` over the full 42 px circle (the MenuButton inner
+  node had shrunk the hit target).
+- **Not consumed:** contracts v0.14.0 / assets v0.23.0 `surface.overlay`; the
+  composition pins the established assets v0.22.3.
+
+## Status
+
+Done. Live at v0.6.29; the skin/host architecture and the in-page settings are
+documented in `README.md`, the batch handoff, and `dotfiles-assets`
+`skins/README.md`.

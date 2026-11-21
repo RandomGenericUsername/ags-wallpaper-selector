@@ -154,3 +154,40 @@ templates/ags-app/            frozen copyable template for the next app repo
 `config/ags-wallpaper-selector`; `dotfiles-assets` owns the keybind described as
 **Open wallpaper selector** and the `wallpaper-selector-ui` launcher. This repo
 does not provision or edit those repos; it proves only the app-side contract.
+
+## Overlay and skin integration (REQ-005, live)
+
+The selector consumes the generated appearance generation (palette + skin +
+mode) through `createAppearance({ configDir: "ags-wallpaper-selector" })`. The
+bundled `style.css` is the fallback; the generated sheet is the USER-priority
+source of surface paint. The overlay is a layer-shell **`surface.panel`**, so
+the active skin paints it and the skin's `[host]` policy gives its radius/border
+from the compositor (Hyprland `rounding`/`border_size`).
+
+Implementation rules (also in the batch handoff and `dotfiles-assets`
+`skins/README.md`):
+
+- **App owns layout/structure/content; the skin owns paint/type/ink.** The skin
+  template styles the app-declared classes with role tokens (the sound-panel
+  pattern). The app CSS keeps layout and fallbacks only.
+- The app **must not read appearance tokens** (`appearance.value(...)` fails
+  the layout gate) or use CSS inheritance to reproduce role geometry. When an
+  app-owned node needs role geometry, the skin template supplies it:
+  `.ws-look-frame { border-radius: {{SKIN_SURFACE_CONTROL_RADIUS}}; }`
+  (assets v0.22.3).
+- The looks selected ring is an overlay above the thumbnail (an inset button
+  shadow sits behind the picture). Its radius is the skin's control radius; its
+  colour is the focused wallpaper's palette hint, painted with a per-widget
+  provider at `USER + 1`. The selected state **replaces** the skin's base
+  hairline, so there is one ring.
+- The Set button and bar progress use the same per-wallpaper accent with a
+  computed contrast ink (USER + 1).
+- Settings are the mock's **in-page** `.ws-settings` panel with a full-window
+  click catcher — **not** a `Gtk.Popover`. A popover is a separate compositor
+  popup whose grab/pointer focus survives its unmap until motion, swallowing
+  the next same-spot click. The gear is a plain `Gtk.Button` covering the whole
+  42 px circle; the panel opens above the bottom bar or below the top bar and
+  the skin paints `.ws-settings`.
+- Assets **v0.22.3** is required for the frame radius. The `surface.overlay`
+  experiment (contracts v0.14.0 / assets v0.23.0) is **not consumed**; the
+  release line maps the overlay to `surface.panel`.
