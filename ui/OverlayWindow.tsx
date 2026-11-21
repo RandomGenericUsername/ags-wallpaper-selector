@@ -249,7 +249,7 @@ export function WallpaperSelectorWindow(
 
   const controlBar = new ControlBar({
     width: barWidth,
-    settings: settingsPopover,
+    gearPopover: settingsPopover.popover,
     onSet: () => commit(),
     onLookSelect: (index) => {
       if (state.phase === "committing") return;
@@ -524,7 +524,7 @@ export function WallpaperSelectorWindow(
 
   function showGrid(focusSearch: boolean): void {
     if (state.phase === "committing") return;
-    controlBar.closeSettings();
+    controlBar.gear.set_active(false);
     state = openGrid(state, true);
     contactSheet.setQuery("");
     render(false);
@@ -548,8 +548,8 @@ export function WallpaperSelectorWindow(
       hideWindow();
       return true;
     }
-    if (controlBar.isSettingsOpen()) {
-      controlBar.closeSettings();
+    if (controlBar.gear.get_active()) {
+      controlBar.gear.set_active(false);
       return true;
     }
     if (state.page === "grid") {
@@ -580,7 +580,7 @@ export function WallpaperSelectorWindow(
     const target = lookPathOf(model, entry, state.focus.look);
     state = beginCommit(state);
     render(false);
-    controlBar.closeSettings();
+    controlBar.gear.set_active(false);
     if (commitTimeout !== null) GLib.source_remove(commitTimeout);
     commitTimeout = GLib.timeout_add(
       GLib.PRIORITY_DEFAULT,
@@ -835,7 +835,7 @@ export function WallpaperSelectorWindow(
           if (keyval === Gdk.KEY_Escape) return escapePressed();
           // The settings popover owns its own focus/Esc; do not navigate the
           // overlay behind an open popover.
-          if (controlBar.isSettingsOpen()) return false;
+          if (controlBar.gear.get_active()) return false;
           const typing = contactSheet.isSearchFocused();
           if (state.page === "grid") {
             if (typing) {

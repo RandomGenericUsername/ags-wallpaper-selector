@@ -15,7 +15,6 @@
 import { Gtk } from "ags/gtk4";
 import Pango from "gi://Pango?version=1.0";
 import { LooksStrip, type LooksStripModel } from "./LooksStrip";
-import type { SettingsPopover } from "./SettingsPopover";
 
 export interface ControlBarModel {
   name: string;
@@ -43,7 +42,7 @@ export interface ControlBarModel {
 
 export interface ControlBarOptions {
   width: number;
-  settings: SettingsPopover;
+  gearPopover: Gtk.Popover;
   onSet(): void;
   onLookSelect(index: number): void;
 }
@@ -105,12 +104,10 @@ export class ControlBar {
   private readonly barProgress: Gtk.ProgressBar;
   private readonly hints: Gtk.Box;
   private readonly middle: Gtk.Box;
-  readonly gear: Gtk.Button;
+  readonly gear: Gtk.MenuButton;
   private readonly accentProvider: Gtk.CssProvider;
-  private readonly settings: SettingsPopover;
 
   constructor(options: ControlBarOptions) {
-    this.settings = options.settings;
     this.bar = new Gtk.CenterBox();
     this.bar.add_css_class("ws-control-bar");
     this.bar.set_halign(Gtk.Align.CENTER);
@@ -183,24 +180,19 @@ export class ControlBar {
     const actions = new Gtk.Box({ orientation: Gtk.Orientation.HORIZONTAL, spacing: 8 });
     actions.add_css_class("ws-actions");
 
-    const gear = new Gtk.Button();
+    const gear = new Gtk.MenuButton();
     gear.add_css_class("ws-gear");
     gear.set_size_request(42, 42);
     gear.set_halign(Gtk.Align.CENTER);
     gear.set_valign(Gtk.Align.CENTER);
     gear.set_tooltip_text("Placement settings");
     gear.update_property([Gtk.AccessibleProperty.LABEL], ["Placement settings"]);
+    gear.set_popover(options.gearPopover);
     const gearIcon = new Gtk.Image({ icon_name: "emblem-system-symbolic", pixel_size: 16 });
     gear.set_child(gearIcon);
-    // The sound-panel pattern: the whole button is the hit target; the popover
-    // is parented to it while open, not to an inner menu-button node.
-    gear.connect("clicked", () => options.settings.toggle(gear));
-    options.settings.onOpenChange((open) => {
-      if (open) gear.add_css_class("is-active");
-      else {
-        gear.remove_css_class("is-active");
-        gear.grab_focus();
-      }
+    gear.connect("notify::active", () => {
+      if (gear.get_active()) gear.add_css_class("is-active");
+      else gear.remove_css_class("is-active");
     });
     actions.append(gear);
     this.gear = gear;
@@ -359,14 +351,6 @@ export class ControlBar {
   setResponsive(width: number): void {
     this.hints.set_visible(width >= 1180);
     this.middle.set_visible(width >= 980);
-  }
-
-  isSettingsOpen(): boolean {
-    return this.settings.isOpen();
-  }
-
-  closeSettings(): void {
-    this.settings.close();
   }
 
   /** Focus the commit action (documented tab order starts here). */

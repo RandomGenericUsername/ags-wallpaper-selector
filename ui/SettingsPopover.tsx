@@ -67,9 +67,7 @@ function segmented(
 }
 
 export class SettingsPopover {
-  private current: Gtk.Popover | null = null;
-  private readonly content: Gtk.Box;
-  private readonly openListeners: Array<(open: boolean) => void> = [];
+  readonly popover: Gtk.Popover;
   private readonly offsetRow: Gtk.Box;
   private readonly offsetValue: Gtk.Label;
   private readonly minus: Gtk.Button;
@@ -83,6 +81,10 @@ export class SettingsPopover {
   constructor(options: SettingsPopoverOptions) {
     this.settings = options.initial;
     this.onChange = options.onChange;
+
+    this.popover = new Gtk.Popover();
+    this.popover.add_css_class("ws-settings-popover");
+    this.popover.set_has_arrow(false);
 
     const content = new Gtk.Box({
       orientation: Gtk.Orientation.VERTICAL,
@@ -176,53 +178,8 @@ export class SettingsPopover {
     const footer = label("Changes save immediately.", "ws-settings-foot");
     content.append(footer);
 
-    this.content = content;
+    this.popover.set_child(content);
     this.sync();
-  }
-
-  /** Create and pop a fresh popover anchored to the whole gear button (the
-   * sound-panel pattern); reuse leaves a stale surface/grab that swallows the
-   * next same-spot click. */
-  toggle(anchor: Gtk.Widget): void {
-    if (this.isOpen()) {
-      this.close();
-      return;
-    }
-    if (this.current !== null) {
-      this.current.set_child(null);
-      this.current.unparent();
-      this.current = null;
-    }
-    const popover = new Gtk.Popover();
-    popover.add_css_class("ws-settings-popover");
-    popover.set_has_arrow(false);
-    popover.set_child(this.content);
-    popover.set_parent(anchor);
-    popover.connect("closed", () => {
-      popover.set_child(null);
-      popover.unparent();
-      if (this.current === popover) this.current = null;
-      this.notifyOpen(false);
-    });
-    this.current = popover;
-    popover.popup();
-    this.notifyOpen(true);
-  }
-
-  close(): void {
-    this.current?.popdown();
-  }
-
-  isOpen(): boolean {
-    return this.current !== null && this.current.get_visible();
-  }
-
-  onOpenChange(listener: (open: boolean) => void): void {
-    this.openListeners.push(listener);
-  }
-
-  private notifyOpen(open: boolean): void {
-    for (const listener of this.openListeners) listener(open);
   }
 
   /** Replace the view from the persisted settings (e.g. after a failed save). */

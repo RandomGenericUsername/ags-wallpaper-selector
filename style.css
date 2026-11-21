@@ -268,8 +268,10 @@ menubutton.ws-gear.image-button,
  * rounded square; strip it so only the skin's circle is visible. */
 menubutton.ws-gear button,
 .ws-gear button {
-  min-width: 0;
-  min-height: 0;
+  /* The inner button is the hit target: make it the full 42 px circle, not
+   * the 16 px glyph. This is what made edge clicks dead. */
+  min-width: 42px;
+  min-height: 42px;
   padding: 0;
   border: none;
   border-radius: 999px;

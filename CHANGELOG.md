@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.6.28 — 2026-11-20
+
+- Settings gear: return to the native `Gtk.MenuButton` toggle (its own popover
+  grab/autohide lifecycle) and make the inner button fill the full 42 px circle
+  (`min-width/min-height: 42px`). The dead edge clicks came from the inner
+  button being shrunk to the 16 px glyph. The third same-spot click was the
+  plain Button+Popover grab consuming click 2 and leaving pointer focus on the
+  destroyed popover until motion.
+
 ## v0.6.27 — 2026-11-20
 
 - Settings gear: open a fresh `Gtk.Popover` anchored to the whole button on each
